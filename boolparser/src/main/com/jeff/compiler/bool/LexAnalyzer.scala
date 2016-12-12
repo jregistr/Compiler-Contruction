@@ -1,29 +1,50 @@
 package com.jeff.compiler.bool
 
+import scala.collection.mutable.{Queue => Line}
 import scala.util.{Failure, Success, Try}
 
-class  LexAnalyzer {
+class LexAnalyzer {
 
-  private var line:String = "$"
-  private var yy:Char = ' '
-  private var token:Char = ' '
+  private val line: Line[Char] = new Line[Char]()
 
-  def setText(text:String): Unit = {
-    line = text.replaceAll("\\s", "")
+  def setText(text: String): Unit = {
+    line.clear()
+    text.foreach(char => {
+      if (char != ' ') {
+        line.enqueue(char)
+      }
+    })
   }
 
-  def matches(tok:Char):Try[Char] = {
-    if(tok == token) {
-      val lexVal = yy
-      consume()
-      Success(lexVal)
-    }else {
-      Failure(new ParsingException(s"$tok", "$yy"))
+  def matches(tok: Char): Try[Char] = {
+    val res = consume()
+    res match {
+      case Failure(err) => Failure(err)
+      case Success(value) =>
+        if (tok == value._1)
+          Success(value._2)
+        else
+          Failure(new ParsingException(
+        tok match {
+          case Const.LIT => "literal character"
+          case _ => tok.toString
+        }
+      ))
     }
   }
 
-  private def consume(): Unit = {
-
+  private def consume(): Try[(Char, Char)] = {
+    val top = if (line.nonEmpty) Some(line.dequeue()) else None
+    top match {
+      case None | Some('\n') =>
+        Success(Const.END, Const.END)
+      case Some(inner) =>
+        inner match {
+          case x if (x.isLetter && x.isLower && x <= 'z') | (x == '0' || x == '1') => Success(Const.LIT, inner)
+          case '&' | '|' | '^' | '!' | '=' | '?' | '(' | ')' => Success(inner, inner)
+          case _ => Failure(new ParsingException(inner))
+        }
+    }
   }
 
 }

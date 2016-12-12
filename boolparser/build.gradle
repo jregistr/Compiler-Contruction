@@ -4,7 +4,9 @@ version '1.0-SNAPSHOT'
 apply plugin: 'scala'
 apply plugin: 'application'
 
-sourceCompatibility = 1.6
+sourceCompatibility = 1.8
+
+mainClassName = "com.jeff.compiler.bool.Program"
 
 repositories {
     mavenCentral()
