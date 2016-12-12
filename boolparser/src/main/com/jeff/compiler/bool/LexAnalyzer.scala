@@ -26,10 +26,19 @@ class LexAnalyzer {
         else
           Failure(new ParsingException(
         tok match {
-          case Const.LIT => "literal character"
+          case Const.ID => "an id"
+          case Const.LIT => "literal value"
           case _ => tok.toString
         }
       ))
+    }
+  }
+
+  def matches(tok1:Char, tok2:Char):Try[Char] = {
+    val res = matches(tok1)
+    res match {
+      case Success(v) => Success(v)
+      case Failure(_) => matches(tok2)
     }
   }
 
@@ -40,7 +49,8 @@ class LexAnalyzer {
         Success(Const.END, Const.END)
       case Some(inner) =>
         inner match {
-          case x if (x.isLetter && x.isLower && x <= 'z') | (x == '0' || x == '1') => Success(Const.LIT, inner)
+          case x if x.isLetter && x.isLower && x <= 'z' => Success(Const.ID, inner)
+          case y if y == '0' || y == '1' => Success(Const.LIT, inner)
           case '&' | '|' | '^' | '!' | '=' | '?' | '(' | ')' => Success(inner, inner)
           case _ => Failure(new ParsingException(inner))
         }
