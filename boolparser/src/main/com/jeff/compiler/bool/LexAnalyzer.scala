@@ -17,12 +17,14 @@ class LexAnalyzer {
   }
 
   def matches(tok: Char): Try[Char] = {
-    val res = consume()
+    val res = next()
     res match {
       case Failure(err) => Failure(err)
       case Success(value) =>
-        if (tok == value._1)
+        if (tok == value._1){
+          line.dequeue()
           Success(value._2)
+        }
         else
           Failure(new ParsingException(
         tok match {
@@ -42,8 +44,8 @@ class LexAnalyzer {
     }
   }
 
-  private def consume(): Try[(Char, Char)] = {
-    val top = if (line.nonEmpty) Some(line.dequeue()) else None
+  private def next(): Try[(Char, Char)] = {
+    val top = if (line.nonEmpty) Some(line.front) else None
     top match {
       case None | Some('\n') =>
         Success(Const.END, Const.END)

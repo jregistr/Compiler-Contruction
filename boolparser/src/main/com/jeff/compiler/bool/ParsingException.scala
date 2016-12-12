@@ -3,8 +3,6 @@ package com.jeff.compiler.bool
 
 class ParsingException (message:String) extends Exception(message) {
 
-  private val E = "Error While parsing."
-
   def this(unExpected:Char) {
     this(s"Error While parsing. Unexpected character found:$unExpected")
   }
