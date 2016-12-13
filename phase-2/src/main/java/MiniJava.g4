@@ -1,196 +1,107 @@
-/** Mini-Java ANTLR4 grammar **/
-
 grammar MiniJava;
 
-@header {
-    package mini_java.antlr;
-}
-
 goal
-    :   mainClassDeclaration
-        classDeclaration*
+    :   mainClass
+        classDecl*
         EOF
     ;
+mainClass
+  :   'class' ID '{' 'public' 'static' 'void' 'main'
+                '(' 'String' '[' ']' ID ')' '{' variableDeclaration* statement* '}' '}'
+  ;
+classDecl
+  :   'class' ID '{' fieldDeclaration* methodDecl* '}'
+        # baseClass
+  |   'class' ID 'extends' ID '{' fieldDeclaration* methodDecl* '}'
+        # childClass
+        ;
+variableDeclaration : type ID ';' #ImmutableVariable
+        | 'mutable' type ID ';' #MutableVariable
+        ;
+fieldDeclaration : type ID ';' #ImmutableField
+        | 'mutable' type ID ';' #MutableField
+        ;
+methodDecl :
+        'public' type ID '(' (methodParam (',' methodParam+)*)? ')'
+        '{' variableDeclaration* statement* 'return' expr ';' '}'
+        ;
+methodParam : type ID
+        ;
 
-mainClassDeclaration
-    :   'class' ID
-        mainClassBody
-    ;
-
-classDeclaration
-    :   'class' ID ('extends' type)?
-        classBody
-    ;
-
-mainClassBody
-    :   '{' mainMethod '}'
-    ;
-
-mainMethod
-    :   mainMethodDeclaration '{' statement '}'
-    ;
-
-mainMethodDeclaration
-    :   'public' 'static' 'void' 'main' '(' 'String' '[' ']' ID ')'
-    ;
-
-classBody
-    :   '{' fieldDeclaration*
-            methodDeclaration* '}'
-    ;
-
-fieldDeclaration
-    :   mutable type ID ';'
-    |   type ID ';'
-    ;
-
-varDeclaration
-    :   mutable type ID ';'
-    |   type ID ';'
-    ;
-
-methodDeclaration
-    :   ( 'public' type ID formalParameters
-        /* illegal method declarations */
-        |          type ID formalParameters
-            {notifyErrorListeners("method declaration without public");}
-        | 'public'      ID formalParameters
-            {notifyErrorListeners("method declaration without return type");}
-        | 'public' type    formalParameters
-            {notifyErrorListeners("method declaration without method name");}
-        | 'public' type ID
-            {notifyErrorListeners("method declaration without argument list");}
-        )
-        methodBody
-    ;
-
-methodBody
-    :   '{'
-            varDeclaration*
-            statement+
-        '}'
-    ;
-
-formalParameters
-    :   '(' formalParameterList? ')'
-    ;
-
-formalParameterList
-    :   formalParameter (',' formalParameter)*
-    ;
-
-formalParameter
-    :   type ID
-    ;
-
-type
-    :   intArrayType
-    |   booleanType
-    |   intType
-    |   ID
-    ;
-
+type  :   'int'
+  |   'int' '[' ']'
+  |   'boolean'
+  |   ID
+        ;
 statement
-    :   '{' statement* '}'
-    # nestedStatement
-    |   'if' '(' expression ')'
-            statement
-        'else'
-            statement
-    # ifElseStatement
-    |   'while' '(' expression ')'
-            statement
-    # whileStatement
-    |   'System.out.println' '(' expression ')' ';'
-    # printStatement
-    |   ID '=' expression ';'
-    # assignStatement
-    |   ID '[' expression ']' '=' expression ';'
-    # arrayAssignStatement
-    |   'return' expression ';'
-    # returnStatement
-    |   'recur' expression '?' methodArgumentList ':' expression ';'
-    # recurStatement
-    ;
+  :   '{' statement* '}'
+        # basicBlock
+  |   'System.out.println' '(' expr ')' ';'
+        # printToConsole
+  |   ID '=' expr ';'
+        # varDefinition
+  |   ID '[' expr ']' '=' expr ';'
+        # arrayDefinition
+  |   'while' '(' expr ')' statement
+        # whileLoopHead
+  |   'if' '(' expr ')' statement 'else' statement
+        # ifStatement
+  ;
 
-expression
-    :   expression '[' expression ']'
-    # arrayAccessExpression
-    |   expression '.' 'length'
-    # arrayLengthExpression
-    |   expression '.' ID methodArgumentList
-    # methodCallExpression
-    |   '-' expression
-    # negExpression
-    |   '!' expression
-    # notExpression
-    |   'new' 'int' '[' expression ']'
-    # arrayInstantiationExpression
-    |   'new' ID '(' ')'
-    # objectInstantiationExpression
-    |   expression '+'  expression
-    # addExpression
-    |   expression '-'  expression
-    # subExpression
-    |   expression '*'  expression
-    # mulExpression
-    |   expression '<'  expression
-    # ltExpression
-    |   expression '&&' expression
-    # andExpression
-    |   INT
-    # intLitExpression
-    |   BOOL
-    # booleanLitExpression
-    |   ID
-    # identifierExpression
-    |   'this'
-    # thisExpression
-    |   '(' expression ')'
-    # parenExpression
-    ;
+expr
+  : expr PLUS expr
+  # plusExpression
+  |   expr MINUS expr
+  # subtractExpression
+  |   expr MULT expr
+  # multiplyExpression
+  |   atom '[' expr ']'
+  # arrayAccessExpression
+  |   expr '.' 'length'
+  # arrLenExpression
+  |   expr '.' ID '(' ( expr ( ',' expr )* )? ')'
+  # methodCallExpression
+  | '(' expr ')'
+  # parenExpr
+  |   '!' expr
+  # notExpr
+  |   expr LESS_THAN expr
+  # lessThanExpr
+  |   expr GREAT_THAN expr
+  # greaterThanExpr
+  |   expr '&&' expr
+  # andExpr
+  |   atom
+  # atomExpr
+  ;
 
-methodArgumentList
-    :   '(' (expression (',' expression)*)? ')'
-    ;
+PLUS: '+';
+MINUS: '-';
+MULT: '*';
+LESS_THAN: '<';
+GREAT_THAN: '>';
+AND: '&&';
 
-intArrayType
-    :   'int' '[' ']'
-    ;
+atom :
+  INT_LIT
+  # intLiteral
+  | ID
+  # idLiteral
+  | 'new' ID '(' ')'
+  # constructorCall
+  | 'this'
+  # thisCall
+  | 'new' 'int' '[' expr ']'
+  # integerArr
+  | BOOLEAN_LIT
+  # booleanLit
+  ;
 
-booleanType
-    :   'boolean'
-    ;
-
-intType
-    :   'int'
-    ;
-
-INT
-    :   ('0' | [1-9][0-9]*)
-    ;
-
-BOOL
-    :   'true'
-    |   'false'
-    ;
-
-ID
-    :   [a-zA-Z_][0-9a-zA-Z_]*
-    ;
-
-mutable
-    :   'mutable'
-    ;
-
-WS
-    :   [ \r\t\n]+ -> skip
-    ;
-
-COMMENT
-    : '/*' .*? '*/' -> skip
-    ;
-
+ID        :   [a-zA-Z_][a-zA-Z0-9_]*;
+INT_LIT       :   '0'..'9'+ ;
+BOOLEAN_LIT   :   ('true' | 'false') ;
+WS        :   [ \t\r\n]+ -> skip ;
+COMMENT   : '/*' .*? '*/' -> skip ;
 LINE_COMMENT
-    : '//' ~[\r\n]* -> skip
-    ;
+          : '//' .*? '\r'? '\n' -> skip;
+THIS: (ID | 'this');

@@ -6,7 +6,7 @@ import scala.util.{Failure, Success}
 
 class Parser {
 
-  private val store = IMap() ++ (for(e <- 'a' to 'z') yield e -> false).toMap
+  private val store = IMap() ++ ('a' to 'z' map(_ -> false))
   private val lex = new LexAnalyzer
 
   def parse(expression:String):Unit = {
