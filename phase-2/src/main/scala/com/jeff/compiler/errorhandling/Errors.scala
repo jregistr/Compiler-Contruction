@@ -41,4 +41,12 @@ object Errors {
     VariableNotDeclaredError(s"Variable with name = $name has not been declared in scope with name ${scope.name}")
   }
 
+  def invalidOpOnSymbolType(symbole: Symbole):InvalidOptOnSymbolType = {
+    InvalidOptOnSymbolType(s"Attempted to assign to symbol {$symbole} that is not a variable symbol.")
+  }
+
+  def invalidSymbolForScope(scope: Scope, symbole: Symbole):InvalidOptOnSymbolType = {
+    InvalidOptOnSymbolType(s"Symbole with name $symbole and type ${symbole.typee} does not belong in scope ${scope.name}")
+  }
+
 }

@@ -10,3 +10,5 @@ case class DuplicateDeclarationError(msg:String) extends CompilerError(msg)
 case class ReAssignToImmutableVariableError(msg:String) extends CompilerError(msg)
 
 case class VariableNotDeclaredError(msg:String) extends CompilerError(msg)
+
+case class InvalidOptOnSymbolType(msg:String) extends CompilerError(msg)

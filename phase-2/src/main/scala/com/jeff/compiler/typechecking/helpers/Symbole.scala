@@ -30,7 +30,7 @@ trait VariableSymbol extends IdentifiableSymbol {
   * @param name The name of the parameter.
   * @param typee the type of the parameter.
   */
-case class Parameter(name:String, typee:Klass) extends VariableSymbol
+case class Parameter(name:String, typee:Klass) extends IdentifiableSymbol
 
 /**
   * Class field.
