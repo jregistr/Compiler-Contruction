@@ -1,7 +1,7 @@
 package com.jeff.compiler
 
 import com.compiler.generated.antlr.{MiniJavaLexer, MiniJavaParser}
-import com.jeff.compiler.error.ParseErrorListener
+import com.jeff.compiler.errorhandling.ParseErrorListener
 import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.{ANTLRInputStream, CommonTokenStream, DiagnosticErrorListener}
