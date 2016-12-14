@@ -1,4 +1,4 @@
-package com.jeff.compiler.typechecking.helpers
+package com.jeff.compiler.typechecking.definitions
 
 
 case class MethodSignature(returnType:Klass, name:String, parameters:List[Klass]) {

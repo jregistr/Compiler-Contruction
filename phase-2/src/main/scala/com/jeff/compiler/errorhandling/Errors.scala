@@ -2,7 +2,7 @@ package com.jeff.compiler.errorhandling
 
 
 import com.compiler.generated.antlr.MiniJavaParser
-import com.jeff.compiler.typechecking.helpers.{Klass, Scope, Symbole}
+import com.jeff.compiler.typechecking.definitions.{Klass, Scope, Symbole}
 import org.antlr.v4.runtime.{RecognitionException, Recognizer}
 
 import scala.collection.JavaConversions._
