@@ -4,7 +4,7 @@ import com.jeff.compiler.errorhandling.Errors
 
 import scala.collection.mutable.{Map => MutableMap}
 
-class Method(val name: String, val typee: Klass, private val scope: Scope) extends Scope with Symbole {
+class Method(val name: String, val typee: Klass, private val parentScope: Scope) extends Scope with Symbole {
 
   private val symbols: MutableMap[String, VariableSymbol] = MutableMap()
 
@@ -15,7 +15,7 @@ class Method(val name: String, val typee: Klass, private val scope: Scope) exten
     *
     * @return The optional scope enclosing this scope.
     */
-  override def enclosingScope: Option[Scope] = Some(scope)
+  override def enclosingScope: Option[Scope] = Some(parentScope)
 
   /**
     * Method to search for a symbol locally in a given scope.
@@ -95,7 +95,7 @@ class Method(val name: String, val typee: Klass, private val scope: Scope) exten
               case true => initialisedSymbols.put(found.name, x)
               case false =>
                 isInitialised(x) match {
-                  case true => throw Errors.reAssignToImmutable(scope, x)
+                  case true => throw Errors.reAssignToImmutable(this, x)
                   case false => initialisedSymbols.put(found.name, x)
                 }
             }

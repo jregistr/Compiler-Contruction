@@ -1,13 +1,15 @@
 package com.jeff.compiler.typechecking.helpers
 
-import scala.collection.mutable.{Map=>MutableMap}
+import com.jeff.compiler.errorhandling.Errors
+
+import scala.collection.mutable.{Map => MutableMap}
 
 
 class Klass(val name:String, superClass:Option[Klass]) extends Scope{
 
-  private val symbols: MutableMap[String, VariableSymbol] = MutableMap()
+  private val symbols: MutableMap[String, Symbole] = MutableMap()
 
-  private val initialisedSymbols: MutableMap[String, VariableSymbol] = MutableMap()
+  private val initialisedSymbols: MutableMap[String, Symbole] = MutableMap()
 
   /**
     * Method to get the optional enclosing scope.
@@ -40,7 +42,7 @@ class Klass(val name:String, superClass:Option[Klass]) extends Scope{
     * @param name The name of the symbol.
     * @return An option that may enclose the symbol.
     */
-  override def findInitialisedSymbol(name: String): Option[Symbole] = ???
+  override def findInitialisedSymbol(name: String): Option[Symbole] = initialisedSymbols.get(name)
 
   /**
     * Method to add a symbol to a scope.
@@ -48,7 +50,12 @@ class Klass(val name:String, superClass:Option[Klass]) extends Scope{
     * @param symbol The symbol to add.
     * @return A try signaling success or failure.
     */
-  override def addSymbol(symbol: Symbole): Unit = ???
+  override def addSymbol(symbol: Symbole): Unit = {
+    findSymbolDeeply(symbol.name) match {
+      case None => symbols.put(symbol.name, symbol)
+      case Some(found) => throw Errors.duplicateDeclaration(this, found, symbol)
+    }
+  }
 
   /**
     * Method to initialise a symbol.
@@ -56,7 +63,24 @@ class Klass(val name:String, superClass:Option[Klass]) extends Scope{
     * @param symbol The symbol to initialise.
     * @return A try.
     */
-  override def initialiseSymbol(symbol: Symbole): Unit = ???
+  override def initialiseSymbol(symbol: Symbole): Unit = {
+    findSymbolDeeply(symbol.name) match {
+        case Some(_) =>
+          symbol match {
+            case x:VariableSymbol =>
+              x.mutable match {
+                case false =>
+                  isInitialised(x) match {
+                    case false =>initialisedSymbols.put(x.name, x)
+                    case true => throw Errors.reAssignToImmutable(this, x)
+                  }
+                case true => initialisedSymbols.put(x.name, x)
+              }
+            case _=> throw Errors.invalidOpOnSymbolType(symbol)
+          }
+        case None => throw Errors.variableNotDeclared(this, symbol.name)
+    }
+  }
 
   /**
     * Method to check if a given symbol has been initialised.
@@ -64,5 +88,14 @@ class Klass(val name:String, superClass:Option[Klass]) extends Scope{
     * @param symbol The symbol to check.
     * @return a boolean.
     */
-  override def isInitialised(symbol: Symbole): Boolean = ???
+  override def isInitialised(symbol: Symbole): Boolean = {
+    symbol match {
+      case x:VariableSymbol =>
+        findSymbolDeeply(symbol.name) match {
+          case None => throw Errors.variableNotDeclared(this, symbol.name)
+          case Some(_) => initialisedSymbols.get(symbol.name).isDefined
+        }
+      case _=> throw Errors.invalidOpOnSymbolType(symbol)
+    }
+  }
 }
