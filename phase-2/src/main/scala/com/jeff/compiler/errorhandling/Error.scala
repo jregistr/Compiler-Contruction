@@ -14,3 +14,4 @@ case class VariableNotDeclaredError(msg:String) extends CompilerError(msg)
 case class InvalidOptOnSymbolType(msg:String) extends CompilerError(msg)
 
 case class CyclicDependencyError(msg:String) extends CompilerError(msg)
+

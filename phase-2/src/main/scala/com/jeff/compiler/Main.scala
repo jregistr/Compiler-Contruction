@@ -9,23 +9,30 @@ import org.antlr.v4.runtime.{ANTLRInputStream, CommonTokenStream, DiagnosticErro
 
 object Main {
 
+  case class Ball(ballType:String, bigNess:Int)
+
   def main(args: Array[String]): Unit = {
 
-    val inputStream = getClass.getClassLoader.getResourceAsStream("HelloWorld.minijava")
-    val antlrStream = new ANTLRInputStream(inputStream)
+    val a = List("a", "b", "c", "d")
+    val b = List(1, 2, 3 ,4)
 
-    val lexer = new MiniJavaLexer(antlrStream)
-    val tokenStream = new CommonTokenStream(lexer)
-    val parser = new MiniJavaParser(tokenStream)
+    println(a.zip(b))
 
-    parser.removeErrorListeners()
-
-    parser.addErrorListener(new DiagnosticErrorListener())
-    parser.getInterpreter.setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION)
-
-    parser.addErrorListener(new ParseErrorListener)
-
-    val tree:ParseTree = parser.goal()
+//    val inputStream = getClass.getClassLoader.getResourceAsStream("HelloWorld.minijava")
+//    val antlrStream = new ANTLRInputStream(inputStream)
+//
+//    val lexer = new MiniJavaLexer(antlrStream)
+//    val tokenStream = new CommonTokenStream(lexer)
+//    val parser = new MiniJavaParser(tokenStream)
+//
+//    parser.removeErrorListeners()
+//
+//    parser.addErrorListener(new DiagnosticErrorListener())
+//    parser.getInterpreter.setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION)
+//
+//    parser.addErrorListener(new ParseErrorListener)
+//
+//    val tree:ParseTree = parser.goal()
 
   }
 

@@ -4,7 +4,7 @@ import com.jeff.compiler.errorhandling.Errors
 
 import scala.collection.mutable.{Map => MutableMap}
 
-class Method(val name: String, val typee: Klass, private val parentScope: Scope) extends Scope with Symbole {
+class Method(val name: String, val typee: Klass, private val parentScope: Scope, val signature: MethodSignature) extends Scope with Symbole {
 
   private val symbols: MutableMap[String, IdentifiableSymbol] = MutableMap()
 
