@@ -2,13 +2,13 @@ package com.jeff.compiler.typechecking.helpers
 
 import com.jeff.compiler.errorhandling.Errors
 
-import scala.collection.mutable.{Map => SymbolMap}
+import scala.collection.mutable.{Map => MutableMap}
 
 class Method(val name: String, val typee: Klass, private val scope: Scope) extends Scope with Symbole {
 
-  private val symbols: SymbolMap[String, VariableSymbol] = SymbolMap()
+  private val symbols: MutableMap[String, VariableSymbol] = MutableMap()
 
-  private val initialisedSymbols: SymbolMap[String, VariableSymbol] = SymbolMap()
+  private val initialisedSymbols: MutableMap[String, VariableSymbol] = MutableMap()
 
   /**
     * Method to get the optional enclosing scope.
