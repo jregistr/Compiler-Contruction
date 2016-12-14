@@ -2,10 +2,11 @@ package com.jeff.compiler.errorhandling
 
 
 import com.compiler.generated.antlr.MiniJavaParser
-import com.jeff.compiler.typechecking.helpers.{Scope, Symbole}
+import com.jeff.compiler.typechecking.helpers.{Klass, Scope, Symbole}
 import org.antlr.v4.runtime.{RecognitionException, Recognizer}
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable
 
 object Errors {
 
@@ -47,6 +48,21 @@ object Errors {
 
   def invalidSymbolForScope(scope: Scope, symbole: Symbole):InvalidOptOnSymbolType = {
     InvalidOptOnSymbolType(s"Symbole with name $symbole and type ${symbole.typee} does not belong in scope ${scope.name}")
+  }
+
+  def cannotAssignClassSymbols(scope: Klass):InvalidOptOnSymbolType = {
+    InvalidOptOnSymbolType(s"Cannot assign class variables in class scope directly. Class:${scope.name}")
+  }
+
+  def cyclicDependencyError(inheritanceLine:List[Klass]):CyclicDependencyError = {
+    if(inheritanceLine.length < 2)
+      throw new IllegalArgumentException("Inheritance line should be of at least length = 2")
+
+    val stringBuilder = new StringBuilder()
+    stringBuilder.append("Cyclic dependency found.\n")
+    stringBuilder.append("Below is the inheritance line:")
+    stringBuilder.append(inheritanceLine.mkString("\n"))
+    CyclicDependencyError(stringBuilder.mkString)
   }
 
 }

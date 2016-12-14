@@ -6,9 +6,9 @@ import scala.collection.mutable.{Map => MutableMap}
 
 class Method(val name: String, val typee: Klass, private val parentScope: Scope) extends Scope with Symbole {
 
-  private val symbols: MutableMap[String, VariableSymbol] = MutableMap()
+  private val symbols: MutableMap[String, IdentifiableSymbol] = MutableMap()
 
-  private val initialisedSymbols: MutableMap[String, VariableSymbol] = MutableMap()
+  private val initialisedSymbols: MutableMap[String, IdentifiableSymbol] = MutableMap()
 
   /**
     * Method to get the optional enclosing scope.
@@ -69,7 +69,7 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope)
     */
   override def addSymbol(symbol: Symbole): Unit = {
     symbol match {
-      case x: VariableSymbol =>
+      case x: IdentifiableSymbol =>
         findSymbolDeeply(x.name) match {
           case None => symbols.put(x.name, x)
           case Some(found) =>
@@ -112,9 +112,13 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope)
     * @return a boolean.
     */
   override def isInitialised(symbol: Symbole): Boolean = {
-    findSymbolDeeply(symbol.name) match {
-      case Some(_) => findInitialisedSymbol(symbol.name).isDefined
-      case None => throw Errors.variableNotDeclared(this, symbol.name)
+    symbol match {
+      case v:VariableSymbol =>
+        findSymbolDeeply(symbol.name) match {
+          case Some(_) => findInitialisedSymbol(symbol.name).isDefined
+          case None => throw Errors.variableNotDeclared(this, symbol.name)
+        }
+      case _=> throw Errors.invalidOpOnSymbolType(symbol)
     }
   }
 
