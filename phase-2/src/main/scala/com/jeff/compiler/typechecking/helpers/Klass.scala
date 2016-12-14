@@ -12,7 +12,7 @@ import scala.collection.mutable.{Map => MutableMap}
   * @param name       The name of the class.
   * @param superClass An optional Klass that is the parent of this class
   */
-class Klass(val name: String, private val superClass: Option[Klass]) extends Scope {
+class Klass(val name: String, private var superClass: Option[Klass]) extends Scope {
 
   private val fields: MutableMap[String, Field] = MutableMap()
   private val initialisedFields: MutableMap[String, Field] = MutableMap()
@@ -213,6 +213,13 @@ class Klass(val name: String, private val superClass: Option[Klass]) extends Sco
           throw Errors.cyclicDependencyError(builder.toList)
         }
         currentSuper = currentSuper.get.superClass
+      }
+    }
+
+    def setSuperClass(klass: Klass):Unit = {
+      superClass match {
+        case None => superClass = Some(klass)
+        case Some(found) => throw Errors.superAlreadyDefined(this, found, klass)
       }
     }
 

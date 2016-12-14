@@ -65,4 +65,8 @@ object Errors {
     CyclicDependencyError(stringBuilder.mkString)
   }
 
+  def superAlreadyDefined(current:Klass, originalSuper:Klass, attempted:Klass):SuperClassAlreadyDefined = {
+    SuperClassAlreadyDefined(s"Class:{${current.name} already has {${originalSuper.name} defined as super class. Attempted Class:${attempted.name}")
+  }
+
 }
