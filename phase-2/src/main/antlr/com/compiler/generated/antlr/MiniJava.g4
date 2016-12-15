@@ -6,20 +6,29 @@ goal
         EOF
     ;
 mainClass
-  :   'class' ID '{' 'public' 'static' 'void' 'main'
-                '(' 'String' '[' ']' ID ')' '{' variableDeclaration* statement* '}' '}'
+  :   'class' className '{' 'public' 'static' 'void' 'main'
+                '(' 'String' '[' ']' ID ')' '{' statement* '}' '}'
   ;
+
+className
+  : ID
+  ;
+
+parentName
+  : ID
+  ;
+
 classDecl
   :   'class' ID '{' fieldDeclaration* methodDecl* '}'
         # baseClass
-  |   'class' ID 'extends' ID '{' fieldDeclaration* methodDecl* '}'
+  |   'class' ID 'extends' parentName '{' fieldDeclaration* methodDecl* '}'
         # childClass
         ;
-variableDeclaration : type ID ';' #ImmutableVariable
-        | 'mutable' type ID ';' #MutableVariable
+variableDeclaration : type ID ';'
+        | mutable='mutable' type ID ';'
         ;
-fieldDeclaration : type ID ';' #ImmutableField
-        | 'mutable' type ID ';' #MutableField
+fieldDeclaration : type ID ';'
+        | mutable='mutable' type ID ';'
         ;
 methodDecl :
         'public' type ID '(' (methodParam (',' methodParam+)*)? ')'
@@ -34,9 +43,7 @@ type  :   'int'
   |   ID
         ;
 statement
-  :   '{' statement* '}'
-        # basicBlock
-  |   'System.out.println' '(' expr ')' ';'
+  :   'System.out.println' '(' expr ')' ';'
         # printToConsole
   |   ID '=' expr ';'
         # varDefinition

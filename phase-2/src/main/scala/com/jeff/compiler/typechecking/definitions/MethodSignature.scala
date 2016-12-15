@@ -1,14 +1,14 @@
 package com.jeff.compiler.typechecking.definitions
 
+import com.jeff.compiler.util.Aliases.ParamMap
 
-case class MethodSignature(returnType:Klass, name:String, parameters:List[Klass]) {
 
+case class MethodSignature(returnType:Klass, name:String, parameters:ParamMap) {
 
   def isIdentical(signature: MethodSignature):Boolean = {
     returnType.name == signature.returnType.name &&
     name.equals(signature.name) &&
-    parameters.length == signature.parameters.length &&
-    parameters.zip(signature.parameters).forall((x:(Klass, Klass)) => x._1.name == x._2.name)
+    signature.parameters.values.map(_.typee) == parameters.values.map(_.typee)
   }
 
 }

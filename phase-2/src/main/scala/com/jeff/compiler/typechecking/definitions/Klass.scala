@@ -1,9 +1,9 @@
 package com.jeff.compiler.typechecking.definitions
 
 import com.jeff.compiler.errorhandling.Errors
+import com.jeff.compiler.util.Aliases.{FieldMap, MethodMap}
 
 import scala.collection.mutable.ListBuffer
-
 import scala.collection.mutable.{Map => MutableMap}
 
 /**
@@ -12,11 +12,11 @@ import scala.collection.mutable.{Map => MutableMap}
   * @param name       The name of the class.
   * @param superClass An optional Klass that is the parent of this class
   */
-class Klass(val name: String, private var superClass: Option[Klass]) extends Scope {
+class Klass(val name: String, var superClass: Option[Klass]) extends Scope {
 
-  private val fields: MutableMap[String, Field] = MutableMap()
-  private val initialisedFields: MutableMap[String, Field] = MutableMap()
-  private val methods: MutableMap[String, Method] = MutableMap()
+  private val fields: FieldMap = MutableMap()
+  private val initialisedFields: FieldMap = MutableMap()
+  private val methods: MethodMap = MutableMap()
 
   /**
     * Method to get the optional enclosing scope.
@@ -47,11 +47,12 @@ class Klass(val name: String, private var superClass: Option[Klass]) extends Sco
   override def initialiseSymbol(symbol: Symbole): Unit = {
     symbol match {
       case field: Field =>
-        fields.get(name) match {
+        fields.get(field.name) match {
           case Some(_) =>
             field.mutable match {
               case true => initialisedFields.put(field.name, field)
-              case false => isInitialised(symbol) match {
+              case false =>
+                isInitialised(symbol) match {
                   case false => initialisedFields.put(field.name, field)
                   case true => throw Errors.reAssignToImmutable(this, symbol)
               }
@@ -75,7 +76,8 @@ class Klass(val name: String, private var superClass: Option[Klass]) extends Sco
     symbol match {
       case field:Field =>
         findFieldLocally(field.name) match {
-          case Some(_) =>initialisedFields.get(name).isDefined
+          case Some(_) =>
+            initialisedFields.get(field.name).isDefined
           case None => enclosingScope match {
             case Some(enclosing) => enclosing.isInitialised(symbol)
             case None => throw Errors.variableNotDeclared(this, field.name)
@@ -184,7 +186,7 @@ class Klass(val name: String, private var superClass: Option[Klass]) extends Sco
   }
 
   def checkForProperOverride(belowMethod: Method, currentMethod: Method):Boolean = {
-    belowMethod.signature.isIdentical(currentMethod.signature)
+    Method.isProperOverride(belowMethod, currentMethod)
   }
 
     /**

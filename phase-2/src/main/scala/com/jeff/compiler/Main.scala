@@ -2,9 +2,14 @@ package com.jeff.compiler
 
 import com.compiler.generated.antlr.{MiniJavaLexer, MiniJavaParser}
 import com.jeff.compiler.errorhandling.ParseErrorListener
+import com.jeff.compiler.typechecking.definitions.{Klass, Scope}
+import com.jeff.compiler.typechecking.walkers.{ClassListener, SymbolListener}
+import com.jeff.compiler.util.Aliases.ClassMap
 import org.antlr.v4.runtime.atn.PredictionMode
-import org.antlr.v4.runtime.tree.ParseTree
+import org.antlr.v4.runtime.tree.{ParseTree, ParseTreeProperty, ParseTreeWalker}
 import org.antlr.v4.runtime.{ANTLRInputStream, CommonTokenStream, DiagnosticErrorListener}
+
+import scala.collection.mutable.{Map => MutableMap}
 
 
 object Main {
@@ -27,6 +32,26 @@ object Main {
 
     val tree:ParseTree = parser.goal()
 
+    val classes:ClassMap = MutableMap()
+    val scopes:ParseTreeProperty[Scope] = new ParseTreeProperty[Scope]()
+    classes ++= List("int", "int[]", "boolean").map(name => (name, new Klass(name, None)))
+
+    classWalk(classes, tree)
+    symbolsWalk(classes, tree, scopes)
+
+//    println(classes("Car").findFieldLocally("gas"))
+
+  }
+
+  private def classWalk(classes:ClassMap, tree:ParseTree): Unit = {
+    val classListener = new ClassListener(classes)
+    ParseTreeWalker.DEFAULT.walk(classListener, tree)
+    classListener.errorForMissingParents()
+  }
+
+  private def symbolsWalk(classes:ClassMap, tree:ParseTree, scopes:ParseTreeProperty[Scope]):Unit = {
+    val symbolListener = new SymbolListener(classes, scopes)
+    ParseTreeWalker.DEFAULT.walk(symbolListener, tree)
   }
 
 }

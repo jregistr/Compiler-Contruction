@@ -2,7 +2,62 @@
 
 class HelloWorld {
     public static void main(String[] args) {
-        int a = 10;
-        System.out.println(1)
+        System.out.println(new Car().start());
     }
 }
+
+
+class Vehicle {
+
+    int cost;
+
+    public int move(int distance) {
+        int howMuchMove;
+        howMuchMove = distance * 10;
+        cost = 200;
+        return howMuchMove;
+    }
+
+    public int step() {
+       return 1;
+    }
+
+    public int baller() {
+//        cost = 2;
+        return 0;
+    }
+
+}
+
+class Car extends Vehicle {
+
+    mutable int gas;
+
+    public int start() {
+        gas = 1000;
+//        cost = 22;
+        return 1;
+    }
+
+    public int step() {
+      return gas;
+    }
+
+}
+
+
+/*
+class A extends C{}
+class B extends A {}
+class C extends B{}
+*/
+
+/*
+class A extends B {}
+
+class B extends A {}
+*/
+
+
+
+
