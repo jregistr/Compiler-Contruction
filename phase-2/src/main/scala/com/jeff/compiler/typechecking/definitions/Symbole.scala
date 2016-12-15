@@ -16,6 +16,7 @@ trait IdentifiableSymbol extends Symbole {
 
   def id_=(id:Int) = _id = id
   def id = _id
+
 }
 
 /**

@@ -74,10 +74,10 @@ class TypeCheckWalker(classes:ClassMap, scopes:ParseTreeProperty[Scope]) extends
   private def stepInScope(ctx:ParserRuleContext): Unit = {
     val searchScope = Option(scopes.get(ctx))
     searchScope match {
+      case None => throw Errors.noScopeFound()
       case scopeOpt:Option[_] =>
         currentScope = scopeOpt
         visitChildren(ctx)
-      case None => throw Errors.noScopeFound()
     }
   }
 

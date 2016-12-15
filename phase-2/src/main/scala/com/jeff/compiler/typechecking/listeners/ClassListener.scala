@@ -14,17 +14,17 @@ class ClassListener(classes: ClassMap) extends MiniJavaBaseListener {
   val awaitingParent:ListBuffer[(Klass, String)] = ListBuffer()
 
   override def enterMainClass(ctx: MainClassContext): Unit = {
-    addClass(ctx.ID(0).getText, None)
+    addClass(ctx.className().getText, None)
   }
 
   override def enterBaseClass(ctx: BaseClassContext): Unit = {
-    val name = ctx.ID().getText
+    val name = ctx.className().getText
     addClass(name, None)
   }
 
   override def enterChildClass(ctx: ChildClassContext): Unit = {
-    val name = ctx.ID(0).getText
-    val parentName = ctx.ID(1).getText
+    val name = ctx.className().getText
+    val parentName = ctx.parentName().getText
 
     val klass = addClass(name, Some(parentName))
     klass.checkForCycles()

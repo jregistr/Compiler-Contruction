@@ -134,6 +134,8 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope,
 
 }
 
+
+
 object Method {
   def isProperOverride(first:Method, second:Method):Boolean = {
     first.typee.name == second.typee.name &&

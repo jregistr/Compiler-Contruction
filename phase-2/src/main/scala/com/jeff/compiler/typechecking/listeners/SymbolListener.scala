@@ -61,16 +61,16 @@ class SymbolListener(classes: ClassMap, scopes: ParseTreeProperty[Scope]) extend
 
 
   override def enterVarDefinition(ctx: VarDefinitionContext): Unit = {
-//    currentScope match {
-//      case None => Errors.noScopeFound()
-//      case Some(scope) =>
-//        val name = ctx.ID().getText
-//        val symbol = scope.findSymbolDeeply(name)
-//        symbol match {
-//          case None => throw Errors.variableNotDeclared(scope, name)
-//          case Some(x) => scope.initialiseSymbol(x)
-//        }
-//    }
+    currentScope match {
+      case None => Errors.noScopeFound()
+      case Some(scope) =>
+        val name = ctx.ID().getText
+        val symbol = scope.findSymbolDeeply(name)
+        symbol match {
+          case None => throw Errors.variableNotDeclared(scope, name)
+          case Some(x) => scope.initialiseSymbol(x)
+        }
+    }
   }
 
   private def getMethodParameters(params: java.util.List[MethodParamContext]): List[Parameter] = {
@@ -89,9 +89,9 @@ class SymbolListener(classes: ClassMap, scopes: ParseTreeProperty[Scope]) extend
   private def doVariableDecFoundCheck(rawContext: ParserRuleContext): (String, Klass, Boolean) = {
     val values: (String, String, Boolean) = rawContext match {
       case ctx: FieldDeclarationContext =>
-        (ctx.ID().getText, ctx.`type`().getText, Option(false).isDefined)
+        (ctx.ID().getText, ctx.`type`().getText, Option(ctx.mutable).isDefined)
       case ctx: VariableDeclarationContext =>
-        (ctx.ID().getText, ctx.`type`().getText, Option(false).isDefined)
+        (ctx.ID().getText, ctx.`type`().getText, Option(ctx.mutable).isDefined)
       case _ => throw Errors.unexpectedContext()
     }
 
@@ -119,11 +119,11 @@ class SymbolListener(classes: ClassMap, scopes: ParseTreeProperty[Scope]) extend
   private def setCurrentScope(context: ParserRuleContext): Unit = {
     val name = context match {
       case main: MainClassContext =>
-        main.ID(0).getText
+        main.className().getText
       case base: BaseClassContext =>
-        base.ID().getText
+        base.className().getText
       case child: ChildClassContext =>
-        child.ID(0).getText
+        child.className().getText
       case _ => throw Errors.unexpectedContext()
     }
 

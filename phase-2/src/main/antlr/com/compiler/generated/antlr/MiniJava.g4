@@ -1,22 +1,23 @@
 grammar MiniJava;
 
-prog :  mainClass classDecl*
+goal :  mainClass
+        classDecl*
        ;
 mainClass
-  :   'class' ID '{' 'public' 'static' 'void' 'main'
+  :   'class' className '{' 'public' 'static' 'void' 'main'
                 '(' 'String' '[' ']' ID ')' '{' variableDeclaration* statement* '}' '}'
   ;
 classDecl
-  :   'class' ID '{' fieldDeclaration* methodDecl* '}'
+  :   'class' className '{' fieldDeclaration* methodDecl* '}'
         # baseClass
-  |   'class' ID 'extends' ID '{' fieldDeclaration* methodDecl* '}'
+  |   'class' className 'extends' parentName '{' fieldDeclaration* methodDecl* '}'
         # childClass
-  |   'case' 'class' ID '(' (caseProperty (',' caseProperty+)*)? ')' ';'
-        # caseClassDecl
         ;
 variableDeclaration : type ID ';'
+         |  mutable='mutable' type ID ';'
         ;
 fieldDeclaration : type ID ';'
+        |  mutable='mutable' type ID ';'
         ;
 methodDecl :
         'public' type ID '(' (methodParam (',' methodParam+)*)? ')'
@@ -24,8 +25,7 @@ methodDecl :
         ;
 methodParam : type ID
         ;
-caseProperty: type ID
-        ;
+
 type  :   'int'
   |   'int' '[' ']'
   |   'boolean'
@@ -76,6 +76,14 @@ expr
   |   atom
   # atomExpr
   ;
+
+ className
+   : ID
+   ;
+
+ parentName
+   : ID
+   ;
 
 PLUS: '+';
 MINUS: '-';
