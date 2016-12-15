@@ -1,5 +1,7 @@
 package com.jeff.compiler
 
+import java.io.InputStream
+
 import com.compiler.generated.antlr.{MiniJavaLexer, MiniJavaParser}
 import com.jeff.compiler.errorhandling.ParseErrorListener
 import com.jeff.compiler.typechecking.definitions.{Klass, Scope}
@@ -17,7 +19,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    val inputStream = getClass.getClassLoader.getResourceAsStream("HelloWorld.minijava")
+    val inputStream: InputStream = getClass.getClassLoader.getResourceAsStream("BinaryTree.minijava")
     val antlrStream = new ANTLRInputStream(inputStream)
 
     val lexer = new MiniJavaLexer(antlrStream)
@@ -31,7 +33,7 @@ object Main {
 
     parser.addErrorListener(new ParseErrorListener)
 
-    val tree:ParseTree = parser.goal()
+    val tree:ParseTree = parser.prog()
 
     val classes:ClassMap = MutableMap()
     val scopes:ParseTreeProperty[Scope] = new ParseTreeProperty[Scope]()
@@ -39,6 +41,8 @@ object Main {
 
     classWalk(classes, tree)
     symbolsWalk(classes, tree, scopes)
+
+
 
   }
 

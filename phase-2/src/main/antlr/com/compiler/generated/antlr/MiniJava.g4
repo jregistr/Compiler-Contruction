@@ -1,34 +1,22 @@
 grammar MiniJava;
 
-goal
-    :   mainClass
-        classDecl*
-        EOF
-    ;
+prog :  mainClass classDecl*
+       ;
 mainClass
-  :   'class' className '{' 'public' 'static' 'void' 'main'
-                '(' 'String' '[' ']' ID ')' '{' statement* '}' '}'
+  :   'class' ID '{' 'public' 'static' 'void' 'main'
+                '(' 'String' '[' ']' ID ')' '{' variableDeclaration* statement* '}' '}'
   ;
-
-className
-  : ID
-  ;
-
-parentName
-  : ID
-  ;
-
 classDecl
   :   'class' ID '{' fieldDeclaration* methodDecl* '}'
         # baseClass
-  |   'class' ID 'extends' parentName '{' fieldDeclaration* methodDecl* '}'
+  |   'class' ID 'extends' ID '{' fieldDeclaration* methodDecl* '}'
         # childClass
+  |   'case' 'class' ID '(' (caseProperty (',' caseProperty+)*)? ')' ';'
+        # caseClassDecl
         ;
 variableDeclaration : type ID ';'
-        | mutable='mutable' type ID ';'
         ;
 fieldDeclaration : type ID ';'
-        | mutable='mutable' type ID ';'
         ;
 methodDecl :
         'public' type ID '(' (methodParam (',' methodParam+)*)? ')'
@@ -36,24 +24,31 @@ methodDecl :
         ;
 methodParam : type ID
         ;
-
+caseProperty: type ID
+        ;
 type  :   'int'
   |   'int' '[' ']'
   |   'boolean'
   |   ID
         ;
 statement
-  :   'System.out.println' '(' expr ')' ';'
+  :   '{' statement* '}'
+        # basicBlock
+  |   'System.out.println' '(' expr ')' ';'
         # printToConsole
   |   ID '=' expr ';'
         # varDefinition
   |   ID '[' expr ']' '=' expr ';'
         # arrayDefinition
-  |   'while' '(' expr ')' statement
+  |   'while' '(' expr ')' whileBlock
         # whileLoopHead
-  |   'if' '(' expr ')' statement 'else' statement
+  |   'if' '(' expr ')' ifBlock 'else' elseBlock
         # ifStatement
   ;
+
+whileBlock: statement;
+ifBlock: statement;
+elseBlock: statement;
 
 expr
   : expr PLUS expr
@@ -90,7 +85,9 @@ GREAT_THAN: '>';
 AND: '&&';
 
 atom :
-  INT_LIT
+    BOOLEAN_LIT
+  # booleanLit
+  | INT_LIT
   # intLiteral
   | ID
   # idLiteral
@@ -100,8 +97,6 @@ atom :
   # thisCall
   | 'new' 'int' '[' expr ']'
   # integerArr
-  | BOOLEAN_LIT
-  # booleanLit
   ;
 
 ID        :   [a-zA-Z_][a-zA-Z0-9_]*;

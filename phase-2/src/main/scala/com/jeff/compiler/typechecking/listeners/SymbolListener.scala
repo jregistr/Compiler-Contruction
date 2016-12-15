@@ -89,9 +89,9 @@ class SymbolListener(classes: ClassMap, scopes: ParseTreeProperty[Scope]) extend
   private def doVariableDecFoundCheck(rawContext: ParserRuleContext): (String, Klass, Boolean) = {
     val values: (String, String, Boolean) = rawContext match {
       case ctx: FieldDeclarationContext =>
-        (ctx.ID().getText, ctx.`type`().getText, Option(ctx.mutable).isDefined)
+        (ctx.ID().getText, ctx.`type`().getText, Option(false).isDefined)
       case ctx: VariableDeclarationContext =>
-        (ctx.ID().getText, ctx.`type`().getText, Option(ctx.mutable).isDefined)
+        (ctx.ID().getText, ctx.`type`().getText, Option(false).isDefined)
       case _ => throw Errors.unexpectedContext()
     }
 
@@ -119,11 +119,11 @@ class SymbolListener(classes: ClassMap, scopes: ParseTreeProperty[Scope]) extend
   private def setCurrentScope(context: ParserRuleContext): Unit = {
     val name = context match {
       case main: MainClassContext =>
-        main.className().getText
+        main.ID(0).getText
       case base: BaseClassContext =>
         base.ID().getText
       case child: ChildClassContext =>
-        child.ID().getText
+        child.ID(0).getText
       case _ => throw Errors.unexpectedContext()
     }
 
