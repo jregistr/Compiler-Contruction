@@ -2,10 +2,11 @@ package com.jeff.compiler.typechecking.definitions
 
 import com.jeff.compiler.errorhandling.Errors
 import com.jeff.compiler.util.Aliases.{LocalVarMap, ParamMap}
+import org.antlr.v4.runtime.Token
 
 import scala.collection.mutable.{Map => MutableMap}
 
-class Method(val name: String, val typee: Klass, private val parentScope: Scope, val parameters:ParamMap) extends Scope with Symbole {
+class Method(val name: String, val typee: Klass, private val parentScope: Scope, val parameters:ParamMap, val token: Token) extends Scope with Symbole {
 
   private val vars: LocalVarMap = MutableMap()
 
@@ -80,9 +81,9 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope,
         findSymbolDeeply(x.name) match {
           case None => vars.put(x.name, x)
           case Some(found) =>
-            throw Errors.duplicateDeclaration(this, found, symbol)
+            throw Errors.duplicateDeclaration(this, found, symbol, symbol.token)
         }
-      case _ => throw Errors.invalidSymbolForScope(this, symbol)
+      case _ => throw Errors.invalidSymbolForScope(this, symbol, symbol.token)
     }
   }
 
@@ -100,16 +101,16 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope,
             x.mutable match {
               case true => initialisedVars.put(x.name, x)
               case false => initialisedVars.get(x.name).isDefined match {
-                case true => throw Errors.reAssignToImmutable(this, x)
+                case true => throw Errors.reAssignToImmutable(this, x, symbol.token)
                 case false => initialisedVars.put(x.name, x)
               }
             }
-          case _=> throw Errors.invalidOpOnSymbolType(found)
+          case _=> throw Errors.invalidOpOnSymbolType(found, symbol.token)
         }
       case None =>
         enclosingScope match {
           case Some(enclosing) => enclosing.initialiseSymbol(symbol)
-          case None => throw Errors.variableNotDeclared(this, symbol.name)
+          case None => throw Errors.variableNotDeclared(this, symbol.name, symbol.token)
         }
     }
   }
@@ -126,9 +127,9 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope,
       case v: VariableSymbol =>
         findSymbolDeeply(symbol.name) match {
           case Some(_) => findInitialisedSymbol(symbol.name).isDefined
-          case None => throw Errors.variableNotDeclared(this, symbol.name)
+          case None => throw Errors.variableNotDeclared(this, symbol.name, symbol.token)
         }
-      case _ => throw Errors.invalidOpOnSymbolType(symbol)
+      case _ => throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
     }
   }
 

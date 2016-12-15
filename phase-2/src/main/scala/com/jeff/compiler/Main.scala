@@ -9,7 +9,7 @@ import com.jeff.compiler.typechecking.listeners.{ClassListener, SymbolListener}
 import com.jeff.compiler.util.Aliases.ClassMap
 import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.tree.{ParseTree, ParseTreeProperty, ParseTreeWalker}
-import org.antlr.v4.runtime.{ANTLRInputStream, CommonTokenStream, DiagnosticErrorListener}
+import org.antlr.v4.runtime.{ANTLRInputStream, CommonTokenStream, DiagnosticErrorListener, Token}
 import com.jeff.compiler.util.Const._
 
 import scala.collection.mutable.{Map => MutableMap}
@@ -37,7 +37,7 @@ object Main {
 
     val classes:ClassMap = MutableMap()
     val scopes:ParseTreeProperty[Scope] = new ParseTreeProperty[Scope]()
-    classes ++= List(INT, INTARR, BOOLEAN).map(name => (name, new Klass(name, None)))
+    classes ++= List(INT, INTARR, BOOLEAN).map(name => (name, new Klass(name, null, None)))
 
     classWalk(classes, tree)
     symbolsWalk(classes, tree, scopes)

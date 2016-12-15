@@ -2,6 +2,7 @@ package com.jeff.compiler.typechecking.definitions
 
 import com.jeff.compiler.errorhandling.Errors
 import com.jeff.compiler.util.Aliases.{FieldMap, MethodMap}
+import org.antlr.v4.runtime.{ParserRuleContext, Token}
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.{Map => MutableMap}
@@ -12,7 +13,7 @@ import scala.collection.mutable.{Map => MutableMap}
   * @param name       The name of the class.
   * @param superClass An optional Klass that is the parent of this class
   */
-class Klass(val name: String, var superClass: Option[Klass]) extends Scope {
+class Klass(val name: String, val token:Token, var superClass: Option[Klass]) extends Scope {
 
   private val fields: FieldMap = MutableMap()
   private val initialisedFields: FieldMap = MutableMap()
@@ -54,15 +55,15 @@ class Klass(val name: String, var superClass: Option[Klass]) extends Scope {
               case false =>
                 isInitialised(symbol) match {
                   case false => initialisedFields.put(field.name, field)
-                  case true => throw Errors.reAssignToImmutable(this, symbol)
+                  case true => throw Errors.reAssignToImmutable(this, symbol, symbol.token)
               }
             }
           case None => enclosingScope match {
             case Some(enclosing) => enclosing.initialiseSymbol(symbol)
-            case None => throw Errors.variableNotDeclared(this, symbol.name)
+            case None => throw Errors.variableNotDeclared(this, symbol.name, symbol.token)
           }
         }
-      case _ => throw Errors.invalidOpOnSymbolType(symbol)
+      case _ => throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
     }
   }
 
@@ -80,10 +81,10 @@ class Klass(val name: String, var superClass: Option[Klass]) extends Scope {
             initialisedFields.get(field.name).isDefined
           case None => enclosingScope match {
             case Some(enclosing) => enclosing.isInitialised(symbol)
-            case None => throw Errors.variableNotDeclared(this, field.name)
+            case None => throw Errors.variableNotDeclared(this, field.name, symbol.token)
           }
         }
-      case _=> throw Errors.invalidOpOnSymbolType(symbol)
+      case _=> throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
     }
   }
 
@@ -129,7 +130,7 @@ class Klass(val name: String, var superClass: Option[Klass]) extends Scope {
     symbol match {
       case field:Field => addField(field)
       case method:Method => addMethod(method)
-      case _=> throw Errors.invalidSymbolForScope(this, symbol)
+      case _=> throw Errors.invalidSymbolForScope(this, symbol, symbol.token)
     }
   }
 
@@ -141,7 +142,7 @@ class Klass(val name: String, var superClass: Option[Klass]) extends Scope {
   def addField(field: Field): Unit = {
     findSymbolDeeply(field.name) match {
       case None=> fields.put(field.name, field)
-      case Some(found) => throw Errors.duplicateDeclaration(this, found, field)
+      case Some(found) => throw Errors.duplicateDeclaration(this, found, field, field.token)
     }
   }
 
@@ -156,10 +157,10 @@ class Klass(val name: String, var superClass: Option[Klass]) extends Scope {
           case None => methods.put(method.name, method)
           case Some(pair)=>checkForProperOverride(pair._2, method) match {
             case true => methods.put(method.name, method)
-            case false => throw Errors.duplicateDeclaration(this, pair._2, method)
+            case false => throw Errors.duplicateDeclaration(this, pair._2, method, method.token)
           }
         }
-      case Some(found) => throw Errors.duplicateDeclaration(this, found, method)
+      case Some(found) => throw Errors.duplicateDeclaration(this, found, method, method.token)
     }
   }
 
@@ -206,22 +207,22 @@ class Klass(val name: String, var superClass: Option[Klass]) extends Scope {
     /**
       * Method to check for inheritance cycles.
       */
-    def checkForCycles():Unit = {
+    def checkForCycles(ctx:ParserRuleContext):Unit = {
       val builder = ListBuffer[Klass]()
       var currentSuper: Option[Klass] = superClass
       while (currentSuper.isDefined) {
         builder += currentSuper.get
         if(currentSuper.get.name == this.name) {
-          throw Errors.cyclicDependencyError(builder.toList)
+          throw Errors.cyclicDependencyError(builder.toList, ctx.start)
         }
         currentSuper = currentSuper.get.superClass
       }
     }
 
-    def setSuperClass(klass: Klass):Unit = {
+    def setSuperClass(klass: Klass, ctx:ParserRuleContext):Unit = {
       superClass match {
         case None => superClass = Some(klass)
-        case Some(found) => throw Errors.superAlreadyDefined(this, found, klass)
+        case Some(found) => throw Errors.superAlreadyDefined(this, found, klass, ctx.start)
       }
     }
 
