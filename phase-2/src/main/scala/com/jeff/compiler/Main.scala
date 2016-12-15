@@ -3,7 +3,7 @@ package com.jeff.compiler
 import com.compiler.generated.antlr.{MiniJavaLexer, MiniJavaParser}
 import com.jeff.compiler.errorhandling.ParseErrorListener
 import com.jeff.compiler.typechecking.definitions.{Klass, Scope}
-import com.jeff.compiler.typechecking.walkers.{ClassListener, SymbolListener}
+import com.jeff.compiler.typechecking.listeners.{ClassListener, SymbolListener}
 import com.jeff.compiler.util.Aliases.ClassMap
 import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.tree.{ParseTree, ParseTreeProperty, ParseTreeWalker}

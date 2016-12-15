@@ -1,4 +1,4 @@
-package com.jeff.compiler.typechecking.walkers
+package com.jeff.compiler.typechecking.listeners
 
 import com.compiler.generated.antlr.MiniJavaBaseListener
 import com.compiler.generated.antlr.MiniJavaParser._
