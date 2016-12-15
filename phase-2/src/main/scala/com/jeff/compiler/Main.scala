@@ -8,6 +8,7 @@ import com.jeff.compiler.util.Aliases.ClassMap
 import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.tree.{ParseTree, ParseTreeProperty, ParseTreeWalker}
 import org.antlr.v4.runtime.{ANTLRInputStream, CommonTokenStream, DiagnosticErrorListener}
+import com.jeff.compiler.util.Const._
 
 import scala.collection.mutable.{Map => MutableMap}
 
@@ -34,12 +35,10 @@ object Main {
 
     val classes:ClassMap = MutableMap()
     val scopes:ParseTreeProperty[Scope] = new ParseTreeProperty[Scope]()
-    classes ++= List("int", "int[]", "boolean").map(name => (name, new Klass(name, None)))
+    classes ++= List(INT, INTARR, BOOLEAN).map(name => (name, new Klass(name, None)))
 
     classWalk(classes, tree)
     symbolsWalk(classes, tree, scopes)
-
-//    println(classes("Car").findFieldLocally("gas"))
 
   }
 

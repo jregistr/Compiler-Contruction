@@ -22,3 +22,5 @@ case class NoClassDefFoundError(msg:String) extends CompilerError(msg)
 case class TypeNotFoundError(msg:String) extends CompilerError(msg)
 
 case class IllegalStateError(msg:String) extends CompilerError(msg)
+
+case class TypeMismatchError(msg:String) extends CompilerError(msg)

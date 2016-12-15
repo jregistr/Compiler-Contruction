@@ -45,6 +45,143 @@ class Car extends Vehicle {
 
 }
 
+class Card {
+
+    mutable int gas;
+
+    public int start() {
+        gas = 1000;
+//        cost = 22;
+        return 1;
+    }
+
+    public int step() {
+        return gas;
+    }
+
+}
+
+class l {
+
+    mutable int gas;
+
+    public int start() {
+        gas = 1000;
+//        cost = 22;
+        return 1;
+    }
+
+    public int step() {
+        return gas;
+    }
+
+}
+class x {
+
+    mutable int gas;
+
+    public int start() {
+        gas = 1000;
+//        cost = 22;
+        return 1;
+    }
+
+    public int step() {
+        return gas;
+    }
+
+}
+class g {
+
+    mutable int gas;
+
+    public int start() {
+        gas = 1000;
+//        cost = 22;
+        return 1;
+    }
+
+    public int step() {
+        return gas;
+    }
+
+}
+class h {
+
+    mutable int gas;
+
+    public int start() {
+        gas = 1000;
+//        cost = 22;
+        return 1;
+    }
+
+    public int step() {
+        return gas;
+    }
+
+}
+class f {
+
+    mutable int gas;
+
+    public int start() {
+        gas = 1000;
+//        cost = 22;
+        return 1;
+    }
+
+    public int step() {
+        return gas;
+    }
+
+}
+class e {
+
+    mutable int gas;
+
+    public int start() {
+        gas = 1000;
+//        cost = 22;
+        return 1;
+    }
+
+    public int step() {
+        return gas;
+    }
+
+}
+class d {
+
+    mutable int gas;
+
+    public int start() {
+        gas = 1000;
+//        cost = 22;
+        return 1;
+    }
+
+    public int step() {
+        return gas;
+    }
+
+}
+class Z {
+
+    mutable int gas;
+
+    public int start() {
+        gas = 1000;
+//        cost = 22;
+        return 1;
+    }
+
+    public int step() {
+        return gas;
+    }
+
+}
+
 
 /*
 class A extends C{}

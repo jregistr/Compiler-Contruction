@@ -14,7 +14,7 @@ import scala.collection.mutable
 
 class SymbolListener(classes: ClassMap, scopes: ParseTreeProperty[Scope]) extends MiniJavaBaseListener {
 
-  var currentScope: Option[Scope] = None
+  private var currentScope: Option[Scope] = None
 
 
   override def enterMainClass(ctx: MainClassContext): Unit = setCurrentScope(ctx)
@@ -61,16 +61,16 @@ class SymbolListener(classes: ClassMap, scopes: ParseTreeProperty[Scope]) extend
 
 
   override def enterVarDefinition(ctx: VarDefinitionContext): Unit = {
-    currentScope match {
-      case None => Errors.noScopeFound()
-      case Some(scope) =>
-        val name = ctx.ID().getText
-        val symbol = scope.findSymbolDeeply(name)
-        symbol match {
-          case None => throw Errors.variableNotDeclared(scope, name)
-          case Some(x) => scope.initialiseSymbol(x)
-        }
-    }
+//    currentScope match {
+//      case None => Errors.noScopeFound()
+//      case Some(scope) =>
+//        val name = ctx.ID().getText
+//        val symbol = scope.findSymbolDeeply(name)
+//        symbol match {
+//          case None => throw Errors.variableNotDeclared(scope, name)
+//          case Some(x) => scope.initialiseSymbol(x)
+//        }
+//    }
   }
 
   private def getMethodParameters(params: java.util.List[MethodParamContext]): List[Parameter] = {

@@ -94,4 +94,12 @@ object Errors {
     DuplicateDeclarationError(s"Duplicate declaration in scope:${scope.name}. Var name:$name")
   }
 
+  def typeMismatch(msg:String):TypeMismatchError = TypeMismatchError(msg)
+
+  def typeMismatch(expected:String, found:String):TypeMismatchError = TypeMismatchError(s"Type mismatch. Expected type:{$expected}, but found:{$found}")
+
+  def unExpectedScope():IllegalStateError = IllegalStateError("Unexpected scope encountered")
+
+  def unExpectedScope(scope:Scope):IllegalStateError = IllegalStateError(s"Unexpected scope encountered. Scope Name:${scope.name}")
+
 }

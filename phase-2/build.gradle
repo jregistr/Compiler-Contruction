@@ -29,12 +29,14 @@ dependencies {
     compile "org.scala-lang:scala-library:2.11.7"
 //    compile group: "org.antlr", name: "antlr4", version: "4.5"
     antlr 'org.antlr:antlr4:4.5.3'
+    compile group: 'org.ow2.asm', name: 'asm', version: '5.1'
+
 
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
 
 generateGrammarSource {
-    arguments += ["-package", "com.compiler.generated.antlr"]
+    arguments += ["-visitor", "-package", "com.compiler.generated.antlr"]
 }
 
 
