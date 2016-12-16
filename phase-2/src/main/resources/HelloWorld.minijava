@@ -13,7 +13,9 @@ class Vehicle {
 
     public int move(int distance, boolean cool) {
         int howMuchMove;
+        boolean whut;
 
+        whut = false;
         howMuchMove = 20;
         cost = 200;
         return howMuchMove;

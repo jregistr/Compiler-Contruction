@@ -151,20 +151,26 @@ class CodeGenerator(classes: ClassMap, scopes: ParseTreeProperty[Scope], methodC
   override def exitIdLiteral(ctx: IdLiteralContext): Unit = {
     checkCurrentScopeMethod(ctx)
     val scope = currentScope.get
-    val symbole = scope.findSymbolDeeply(ctx.ID().getText).get
     val outerClass = enclosingClassScope(Some(scope))
     val outerClassAsm = AsmConverter.classToAsmType(outerClass)
-    symbole match {
-      case field: Field =>
-        val fieldTypeAsm = AsmConverter.classToAsmType(field.typee)
-        methodGen.loadThis()
-        methodGen.getField(outerClassAsm, field.name, fieldTypeAsm)
-      case parameter: Parameter =>
-        methodGen.loadArg(parameter.id)
-      case variable: LocalVariable =>
-        val symbolTypeAsm = AsmConverter.classToAsmType(variable.typee)
-        methodGen.loadLocal(variable.id, symbolTypeAsm)
-      case _ => throw Errors.invalidOpOnSymbolType(symbole, ctx.start)
+    val id = ctx.ID().getText
+    scope.findSymbolDeeply(id) match {
+      case Some(symbole) => symbole match {
+        case field: Field =>
+          val fieldTypeAsm = AsmConverter.classToAsmType(field.typee)
+          methodGen.loadThis()
+          methodGen.getField(outerClassAsm, field.name, fieldTypeAsm)
+        case parameter: Parameter =>
+          methodGen.loadArg(parameter.id)
+        case variable: LocalVariable =>
+          val symbolTypeAsm = AsmConverter.classToAsmType(variable.typee)
+          methodGen.loadLocal(variable.id, symbolTypeAsm)
+        case _ => throw Errors.invalidOpOnSymbolType(symbole, ctx.start)
+      }
+      case None => id match {
+        case "true" | "false" => methodGen.push(id.toBoolean)
+        case _ => throw Errors.typeNotFound(id, ctx.start)
+      }
     }
   }
 

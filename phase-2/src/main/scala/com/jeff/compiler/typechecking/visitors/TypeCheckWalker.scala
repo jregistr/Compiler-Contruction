@@ -78,20 +78,18 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope], metho
     varToDefRaw match {
       case Some(temp) =>
         temp match {
-          case varToDef: VariableSymbol =>
-            if (varToDef.mutable) {
-              val expressionType = Option(visit(ctx.expr()))
-              expressionType match {
-                case None => throw Errors.typeNotFound(ctx.expr().getText, ctx.ID().getSymbol)
-                case Some(expType: Klass) =>
-                  if (varToDef.typee.name == expType.name)
-                    expType
-                  else
-                    throw Errors.typeMismatch(varToDef.typee.name, expType.name, ctx.ID().getSymbol)
-              }
-            } else {
-              throw Errors.reAssignToImmutable(method, varToDef, ctx.start)
+          case varToDef: IdentifiableSymbol =>
+            //            if (varToDef.mutable) {
+            val expressionType = Option(visit(ctx.expr()))
+            expressionType match {
+              case None => throw Errors.typeNotFound(ctx.expr().getText, ctx.ID().getSymbol)
+              case Some(expType: Klass) =>
+                if (varToDef.typee.name == expType.name)
+                  expType
+                else
+                  throw Errors.typeMismatch(varToDef.typee.name, expType.name, ctx.ID().getSymbol)
             }
+          //            }
           case _ =>
             println(varToDefRaw)
             throw Errors.invalidOpOnSymbolType(temp, ctx.ID().getSymbol)
