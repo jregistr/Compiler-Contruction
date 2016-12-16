@@ -24,8 +24,6 @@ class CodeGenerator(classes: ClassMap, scopes: ParseTreeProperty[Scope], methodC
   var methodGen: GeneratorAdapter = _
   var labelStack: mutable.Stack[Label] = mutable.Stack()
 
-  var lastSeenImmutable: Option[VariableSymbol] = None
-
   override def enterMainClass(ctx: MainClassContext): Unit = {
     val className = ctx.className().getText
     enterClass(className)
@@ -77,38 +75,6 @@ class CodeGenerator(classes: ClassMap, scopes: ParseTreeProperty[Scope], methodC
   }
 
 
-  override def enterImmutableFieldDeclaration(ctx: ImmutableFieldDeclarationContext): Unit = {
-    checkCurrentScopeClass(ctx)
-    val scope = currentScope.get
-    val field: Field = scope.findSymbolDeeply(ctx.ID().getText).get.asInstanceOf[Field]
-    classWriter.visitField(ACC_PUBLIC,
-      field.name,
-      AsmConverter.classToAsmType(field.typee).getDescriptor,
-      null, null
-    )
-    lastSeenImmutable = Some(field)
-    classWriter.visitEnd()
-  }
-
-  override def enterImmutableFieldAssign(ctx: ImmutableFieldAssignContext): Unit = {
-    println(currentScope.get.asInstanceOf[Klass].name)
-    val lastField: Field = lastSeenImmutable match {
-      case Some(field: Field) => field
-      case _ => throw Errors.typeNotFound("found immutable assign without last immutable seen", ctx.start)
-    }
-
-    lastSeenImmutable = None
-
-    val enclosing: Klass = enclosingClassScope(currentScope)
-    val fieldType: Klass = lastField.typee
-
-    val enclosingAsm = AsmConverter.classToAsmType(enclosing)
-    val fieldAsm = AsmConverter.classToAsmType(fieldType)
-
-//    methodGen.loadThis()
-  methodGen.putField(enclosingAsm, lastField.name, fieldAsm)
-
-}
 
 //  override def exitImmutableFieldAssign(ctx: ImmutableFieldAssignContext): Unit = {
 //

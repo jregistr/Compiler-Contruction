@@ -13,11 +13,9 @@ classDecl
   |   'class' className 'extends' parentName '{' fieldDeclaration* methodDecl* '}'
         # childClass
         ;
-variableDeclaration : type ID immutableVariableAssign #ImmutableVariableDeclaration
-         |  mutable='mutable' type ID ';' #MutableVariableDeclaration
+variableDeclaration : type ID ';'
         ;
-fieldDeclaration : type ID immutableFieldAssign #ImmutableFieldDeclaration
-        |  mutable='mutable' type ID ';' #MutableFieldDeclaration
+fieldDeclaration : type ID ';'
         ;
 methodDecl :
         'public' type ID '(' (methodParam (',' methodParam+)*)? ')'
@@ -25,14 +23,6 @@ methodDecl :
         ;
 methodParam : type ID
         ;
-
-immutableFieldAssign
-   : '=' expr ';'
-   ;
-
-immutableVariableAssign
-   : '=' expr ';'
-   ;
 
 type  :   'int'
   |   'int' '[' ']'

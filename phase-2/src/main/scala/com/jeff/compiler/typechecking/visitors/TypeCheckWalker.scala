@@ -9,6 +9,7 @@ import com.jeff.compiler.util.Const._
 import org.antlr.v4.runtime.tree.ParseTreeProperty
 import org.antlr.v4.runtime.{ParserRuleContext, Token}
 
+import scala.annotation.tailrec
 import scala.collection.JavaConversions._
 
 class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope], methodCallers: ParseTreeProperty[Klass]) extends MiniJavaBaseVisitor[Klass] {
@@ -141,7 +142,8 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope], metho
           case method: Method =>
             val passedParamsTypes = ctx.expr().tail.map(x => visit(x)).toList
             val methodParamTypes = method.parameters.map(_._2.typee).toList
-            val allMatch = passedParamsTypes.length == methodParamTypes.length && passedParamsTypes.zip(methodParamTypes).forall(pair => pair._1.name == pair._2.name)
+            val allMatch = passedParamsTypes.length == methodParamTypes.length &&
+              methodParamTypes.zip(passedParamsTypes).forall(pair => isSubOf(pair._1, pair._2))
             if (allMatch)
               method.typee
             else
@@ -151,34 +153,53 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope], metho
     }
   }
 
-  override def visitImmutableVariableDeclaration(ctx: ImmutableVariableDeclarationContext): Klass = {
+  @tailrec private def isSubOf(parent: Klass, child: Klass): Boolean = {
+    if (parent.name == child.name) {
+      true
+    } else {
+      child.superClass match {
+        case Some(s) =>
+          isSubOf(parent, s)
+        case None => false
+      }
+    }
+  }
+
+
+  //  override def visitImmutableVariableDeclaration(ctx: ImmutableVariableDeclarationContext): Klass = {
+  //    checkInMethodScope(ctx)
+  //    val varType: Klass = getClassOrErrorOut(ctx.`type`().getText, ctx.ID().getSymbol)
+  //    val expReturnType: Klass = visit(ctx.immutableVariableAssign())
+  //    if (varType.name == expReturnType.name) {
+  //      expReturnType
+  //    } else {
+  //      throw Errors.typeMismatch(varType.name, expReturnType.name, ctx.immutableVariableAssign().start)
+  //    }
+  //  }
+  //
+  //  override def visitImmutableFieldDeclaration(ctx: ImmutableFieldDeclarationContext): Klass = {
+  //    println(ctx.ID().getText)
+  //    checkInClassScope(ctx)
+  //    val varType: Klass = getClassOrErrorOut(ctx.`type`().getText, ctx.ID().getSymbol)
+  //    val expReturnType: Klass = visit(ctx.immutableFieldAssign())
+  //    if (varType.name == expReturnType.name) {
+  //      expReturnType
+  //    } else {
+  //      throw Errors.typeMismatch(varType.name, expReturnType.name, ctx.immutableFieldAssign().start)
+  //    }
+  //  }
+  //
+
+
+  override def visitVariableDeclaration(ctx: VariableDeclarationContext): Klass = {
     checkInMethodScope(ctx)
-    val varType: Klass = getClassOrErrorOut(ctx.`type`().getText, ctx.ID().getSymbol)
-    val expReturnType: Klass = visit(ctx.immutableVariableAssign())
-    if (varType.name == expReturnType.name) {
-      expReturnType
-    } else {
-      throw Errors.typeMismatch(varType.name, expReturnType.name, ctx.immutableVariableAssign().start)
-    }
+    getClassOrErrorOut(ctx.`type`().getText, ctx.ID().getSymbol)
   }
 
-  override def visitImmutableFieldDeclaration(ctx: ImmutableFieldDeclarationContext): Klass = {
-    println(ctx.ID().getText)
+  override def visitFieldDeclaration(ctx: FieldDeclarationContext): Klass = {
     checkInClassScope(ctx)
-    val varType: Klass = getClassOrErrorOut(ctx.`type`().getText, ctx.ID().getSymbol)
-    val expReturnType: Klass = visit(ctx.immutableFieldAssign())
-    if (varType.name == expReturnType.name) {
-      expReturnType
-    } else {
-      throw Errors.typeMismatch(varType.name, expReturnType.name, ctx.immutableFieldAssign().start)
-    }
+    getClassOrErrorOut(ctx.`type`().getText, ctx.ID().getSymbol)
   }
-
-
-
-  override def visitImmutableFieldAssign(ctx: ImmutableFieldAssignContext): Klass = visit(ctx.expr())
-
-  override def visitImmutableVariableAssign(ctx: ImmutableVariableAssignContext): Klass = visit(ctx.expr())
 
   override def visitThisCall(ctx: ThisCallContext): Klass = {
     visitChildren(ctx)

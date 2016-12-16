@@ -243,10 +243,12 @@ class Tree{
 
     public boolean RemoveRight(Tree p_node, Tree c_node){
         boolean ntb ;
+        Tree p_node2;
+        Tree c_node2;
         while (c_node.GetHas_Right()){
             ntb = c_node.SetKey((c_node.GetRight()).GetKey());
-            p_node = c_node ;
-            c_node = c_node.GetRight() ;
+            p_node2 = c_node ;
+            c_node2 = c_node.GetRight() ;
         }
         ntb = p_node.SetRight(my_null);
         ntb = p_node.SetHas_Right(false);
@@ -255,10 +257,12 @@ class Tree{
 
     public boolean RemoveLeft(Tree p_node, Tree c_node){
         boolean ntb ;
+        Tree p_node2;
+        Tree c_node2;
         while (c_node.GetHas_Left()){
             ntb = c_node.SetKey((c_node.GetLeft()).GetKey());
-            p_node = c_node ;
-            c_node = c_node.GetLeft() ;
+            p_node2 = c_node ;
+            c_node2 = c_node.GetLeft() ;
         }
         ntb = p_node.SetLeft(my_null);
         ntb = p_node.SetHas_Left(false);
