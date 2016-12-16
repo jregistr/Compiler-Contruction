@@ -27,19 +27,17 @@ class Vehicle {
     }
 
     public int baller() {
-//        cost = 2;
         return 0;
     }
 
 }
 
-class Car extends Vehicle {
+class Car  {
 
     mutable int gas;
 
     public int start() {
         gas = 1000;
-//        cost = 22;
         return 1;
     }
 

@@ -4,6 +4,7 @@ import java.io.InputStream
 
 import com.compiler.generated.antlr.{MiniJavaLexer, MiniJavaParser}
 import com.jeff.compiler.errorhandling.ParseErrorListener
+import com.jeff.compiler.typechecking.TypeCheckWalker
 import com.jeff.compiler.typechecking.definitions.{Klass, Scope}
 import com.jeff.compiler.typechecking.listeners.{ClassListener, SymbolListener}
 import com.jeff.compiler.util.Aliases.ClassMap
@@ -19,7 +20,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    val inputStream: InputStream = getClass.getClassLoader.getResourceAsStream("HelloWorld.minijava")
+    val inputStream: InputStream = getClass.getClassLoader.getResourceAsStream("Factorial.minijava")
     val antlrStream = new ANTLRInputStream(inputStream)
 
     val lexer = new MiniJavaLexer(antlrStream)
@@ -39,26 +40,29 @@ object Main {
     val scopes:ParseTreeProperty[Scope] = new ParseTreeProperty[Scope]()
     classes ++= List(INT, INTARR, BOOLEAN).map(name => (name, new Klass(name, null, None)))
 
-    classWalk(classes, tree)
-    symbolsWalk(classes, tree, scopes)
-
-    classes.remove(INT)
-    classes.remove(INTARR)
-    classes.remove(BOOLEAN)
-
-//    prettyPrint(classes)
+    declareClasses(classes, tree)
+    declareAndPreCheckSymbols(classes, tree, scopes)
+    runTypeCheck(classes, tree, scopes)
 
   }
 
-  private def classWalk(classes:ClassMap, tree:ParseTree): Unit = {
+  private def declareClasses(classes:ClassMap, tree:ParseTree): Unit = {
     val classListener = new ClassListener(classes)
     ParseTreeWalker.DEFAULT.walk(classListener, tree)
     classListener.errorForMissingParents()
+    println("Collected classes")
   }
 
-  private def symbolsWalk(classes:ClassMap, tree:ParseTree, scopes:ParseTreeProperty[Scope]):Unit = {
+  private def declareAndPreCheckSymbols(classes:ClassMap, tree:ParseTree, scopes:ParseTreeProperty[Scope]): Unit = {
     val symbolListener = new SymbolListener(classes, scopes)
     ParseTreeWalker.DEFAULT.walk(symbolListener, tree)
+    println("Collected symbols")
+  }
+
+  private def runTypeCheck(classes:ClassMap, tree:ParseTree, scopes:ParseTreeProperty[Scope]): Unit = {
+    val typeCheckWalker = new TypeCheckWalker(classes, scopes)
+    typeCheckWalker.visit(tree)
+    println("Type check finished")
   }
 
 //  private def prettyPrint(classes:ClassMap): Unit ={

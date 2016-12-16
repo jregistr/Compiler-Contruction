@@ -6,7 +6,7 @@ import com.jeff.compiler.errorhandling.Errors
 import com.jeff.compiler.typechecking.definitions._
 import com.jeff.compiler.util.Aliases.ClassMap
 import com.jeff.compiler.util.Const._
-import org.antlr.v4.runtime.{ParserRuleContext, Token}
+import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.ParseTreeProperty
 
 import scala.collection.JavaConversions._
@@ -30,9 +30,13 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
     currentScope match {
       case None => throw Errors.noScopeFound(ctx.ID().getSymbol)
       case Some(scope) =>
-        scope.findSymbolDeeply(id) match {
-          case None => throw Errors.variableNotDeclared(scope, id, ctx.ID().getSymbol)
-          case Some(symbole) => symbole.typee
+        if (id == "true" || id == "false") {
+          classes(BOOLEAN)
+        } else {
+          scope.findSymbolDeeply(id) match {
+            case None => throw Errors.variableNotDeclared(scope, id, ctx.ID().getSymbol)
+            case Some(symbole) => symbole.typee
+          }
         }
     }
   }
@@ -154,19 +158,19 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
     val sizeTypeName = visit(ctx.expr()).name
     sizeTypeName match {
       case INT => classes(INTARR)
-      case _ => throw Errors.typeMismatch(INT, sizeTypeName, ctx.expr().start)
+      case _ => throw Errors.typeMismatch(classes(INT).name, sizeTypeName, ctx.expr().start)
     }
   }
 
-  override def visitGreaterThanExpr(ctx: GreaterThanExprContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT, ctx)
+  override def visitGreaterThanExpr(ctx: GreaterThanExprContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT, classes(BOOLEAN), ctx)
 
-  override def visitLessThanExpr(ctx: LessThanExprContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT, ctx)
+  override def visitLessThanExpr(ctx: LessThanExprContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT, classes(BOOLEAN), ctx)
 
   override def visitNotExpr(ctx: NotExprContext): Klass = {
     val expType = visit(ctx.expr())
     expType.name match {
       case BOOLEAN => classes(BOOLEAN)
-      case _=> throw Errors.typeMismatch(BOOLEAN, expType.name, ctx.start)
+      case _ => throw Errors.typeMismatch(classes(BOOLEAN).name, expType.name, ctx.start)
     }
   }
 
@@ -175,25 +179,54 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
     val id = ctx.ID().getText
     val indexType = visit(ctx.expr(0))
     val valueType = visit(ctx.expr(1))
-    
+    currentScope.get.findSymbolDeeply(id) match {
+      case Some(found) => found.typee.name match {
+        case INTARR =>
+          val intType = classes(INT)
+          if (indexType.name == intType.name && valueType.name == intType.name)
+            intType
+          else
+            throw Errors.typeMismatch(intType.name, s"index:${indexType.name}, value:${valueType.name}", ctx.start)
+        case _ => throw Errors.typeMismatch(classes(INTARR).name, found.typee.name, ctx.start)
+      }
+      case None => throw Errors.variableNotDeclared(currentScope.get, id, ctx.start)
+    }
   }
 
-  override def visitWhileLoopHead(ctx: WhileLoopHeadContext): Klass = ???
-
-  override def visitIfStatement(ctx: IfStatementContext): Klass = ???
-
-  override def visitSubtractExpression(ctx: SubtractExpressionContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT, ctx)
-
-  override def visitPlusExpression(ctx: PlusExpressionContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT, ctx)
-
-  override def visitMultiplyExpression(ctx: MultiplyExpressionContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT, ctx)
-
-  override def visitAndExpr(ctx: AndExprContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), BOOLEAN, ctx.expr(0))
-
-  private def twoMatch(left:Klass, right:Klass, expected:String, ctx:ParserRuleContext):Klass = {
+  override def visitWhileLoopHead(ctx: WhileLoopHeadContext): Klass = {
     checkInMethodScope(ctx)
-    if(left.name == expected && right.name == expected)
-      classes(expected)
+    val expType = visit(ctx.expr())
+    val boolType = classes(BOOLEAN)
+    visitChildren(ctx)
+    expType.name match {
+      case BOOLEAN => boolType
+      case _ => throw Errors.typeMismatch(boolType.name, expType.name, ctx.start)
+    }
+  }
+
+  override def visitIfStatement(ctx: IfStatementContext): Klass = {
+    checkInMethodScope(ctx)
+    val expType = visit(ctx.expr())
+    val boolType = classes(BOOLEAN)
+    visitChildren(ctx)
+    expType.name match {
+      case BOOLEAN => boolType
+      case _ => throw Errors.typeMismatch(boolType.name, expType.name, ctx.start)
+    }
+  }
+
+  override def visitSubtractExpression(ctx: SubtractExpressionContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT, classes(INT), ctx)
+
+  override def visitPlusExpression(ctx: PlusExpressionContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT, classes(INT), ctx)
+
+  override def visitMultiplyExpression(ctx: MultiplyExpressionContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT,classes(INT), ctx)
+
+  override def visitAndExpr(ctx: AndExprContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), BOOLEAN, classes(BOOLEAN), ctx.expr(0))
+
+  private def twoMatch(left: Klass, right: Klass, expected: String, returnType:Klass, ctx: ParserRuleContext): Klass = {
+    checkInMethodScope(ctx)
+    if (left.name == expected && right.name == expected)
+      returnType
     else
       throw Errors.typeMismatch(expected, s"LEFT:${left.name}, RIGHT:${right.name}", ctx.start)
   }
@@ -256,17 +289,14 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
     currentScope match {
       case None => throw Errors.noScopeFound(ctx.`type`().start)
       case Some(scope) =>
-        scope match {
-          case klass: Klass =>
-            val searchScope = Option(scopes.get(ctx))
-            searchScope match {
-              case None => throw Errors.noScopeFoundFor(ctx.getText, ctx.`type`().start)
-              case s: Some[_] => currentScope = s
-            }
-          case _ => throw Errors.unExpectedScope(scope, ctx.`type`().start)
+        val nextCur = Option(scopes.get(ctx))
+        nextCur match {
+          case s: Some[_] => currentScope = s
+          case None => throw Errors.noScopeFoundFor(ctx.ID().getText, ctx.start)
         }
     }
   }
+
 
   private def starClassScope(ctx: ParserRuleContext): Unit = {
     val searchScope = Option(scopes.get(ctx))
