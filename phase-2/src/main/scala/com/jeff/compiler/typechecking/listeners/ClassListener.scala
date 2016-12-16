@@ -5,6 +5,7 @@ import com.compiler.generated.antlr.MiniJavaParser.{BaseClassContext, ChildClass
 import com.jeff.compiler.errorhandling.Errors
 import com.jeff.compiler.typechecking.definitions.Klass
 import com.jeff.compiler.util.Aliases.ClassMap
+import com.jeff.compiler.util.Const
 import org.antlr.v4.runtime.ParserRuleContext
 
 import scala.collection.mutable.ListBuffer

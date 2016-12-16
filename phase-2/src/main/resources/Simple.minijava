@@ -1,0 +1,16 @@
+class Simple {
+    public static void main(String[] args) {
+        System.out.println(new Prog());
+    }
+}
+
+class Prog {
+    int a = 10;
+
+//    public int bla(){
+//        mutable int[] b;
+//        b = new int[10];
+//        return 0;
+//    }
+
+}

@@ -7,4 +7,7 @@ object Const {
   val BOOLEAN = "boolean"
   val INTARR = "int[]"
 
+  val OUTPUT_DIR = "src/main/minijava/"
+  val OBJECT = "java/lang/Object"
+
 }

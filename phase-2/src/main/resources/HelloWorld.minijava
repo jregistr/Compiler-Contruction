@@ -12,8 +12,8 @@ class Vehicle {
     int weight = 3000;
 
     public int move(int distance, boolean cool) {
-        int superSack = 4000;
         mutable int howMuchMove;
+
         howMuchMove = 20;
         cost = 200;
         return howMuchMove;

@@ -13,4 +13,5 @@ object Aliases {
   type ClassMap = mutable.Map[String, Klass]
   type FieldMap = mutable.Map[String, Field]
   type MethodMap = mutable.Map[String, Method]
+  type AsmMethod = org.objectweb.asm.commons.Method
 }

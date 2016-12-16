@@ -11,7 +11,7 @@ import org.antlr.v4.runtime.{ParserRuleContext, Token}
 
 import scala.collection.JavaConversions._
 
-class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) extends MiniJavaBaseVisitor[Klass] {
+class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope], methodCallers: ParseTreeProperty[Klass]) extends MiniJavaBaseVisitor[Klass] {
 
   private var currentScope: Option[Scope] = None
 
@@ -76,7 +76,7 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
     val varToDefRaw: Option[Symbole] = method.findSymbolDeeply(ctx.ID().getText)
     varToDefRaw match {
       case Some(temp) =>
-        varToDefRaw match {
+        temp match {
           case varToDef: VariableSymbol =>
             if (varToDef.mutable) {
               val expressionType = Option(visit(ctx.expr()))
@@ -91,7 +91,9 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
             } else {
               throw Errors.reAssignToImmutable(method, varToDef, ctx.start)
             }
-          case _ => throw Errors.invalidOpOnSymbolType(temp, ctx.ID().getSymbol)
+          case _ =>
+            println(varToDefRaw)
+            throw Errors.invalidOpOnSymbolType(temp, ctx.ID().getSymbol)
         }
       case None => throw Errors.variableNotDeclared(method, ctx.ID().getText, ctx.start)
     }
@@ -131,6 +133,7 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
   override def visitMethodCallExpression(ctx: MethodCallExpressionContext): Klass = {
     val methodOwner: Klass = visit(ctx.expr(0))
     val methodName = ctx.ID().getText
+    methodCallers.put(ctx, methodOwner)
     methodOwner.findSymbolDeeply(methodName) match {
       case None => throw Errors.typeNotFound(methodName, ctx.ID().getSymbol)
       case Some(foundSymbole) =>
@@ -151,24 +154,31 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
   override def visitImmutableVariableDeclaration(ctx: ImmutableVariableDeclarationContext): Klass = {
     checkInMethodScope(ctx)
     val varType: Klass = getClassOrErrorOut(ctx.`type`().getText, ctx.ID().getSymbol)
-    val expReturnType: Klass = visit(ctx.expr())
+    val expReturnType: Klass = visit(ctx.immutableVariableAssign())
     if (varType.name == expReturnType.name) {
       expReturnType
     } else {
-      throw Errors.typeMismatch(varType.name, expReturnType.name, ctx.expr().start)
+      throw Errors.typeMismatch(varType.name, expReturnType.name, ctx.immutableVariableAssign().start)
     }
   }
 
   override def visitImmutableFieldDeclaration(ctx: ImmutableFieldDeclarationContext): Klass = {
+    println(ctx.ID().getText)
     checkInClassScope(ctx)
     val varType: Klass = getClassOrErrorOut(ctx.`type`().getText, ctx.ID().getSymbol)
-    val expReturnType: Klass = visit(ctx.expr())
+    val expReturnType: Klass = visit(ctx.immutableFieldAssign())
     if (varType.name == expReturnType.name) {
       expReturnType
     } else {
-      throw Errors.typeMismatch(varType.name, expReturnType.name, ctx.expr().start)
+      throw Errors.typeMismatch(varType.name, expReturnType.name, ctx.immutableFieldAssign().start)
     }
   }
+
+
+
+  override def visitImmutableFieldAssign(ctx: ImmutableFieldAssignContext): Klass = visit(ctx.expr())
+
+  override def visitImmutableVariableAssign(ctx: ImmutableVariableAssignContext): Klass = visit(ctx.expr())
 
   override def visitThisCall(ctx: ThisCallContext): Klass = {
     visitChildren(ctx)
