@@ -8,16 +8,16 @@ mainClass
                 '(' 'String' '[' ']' ID ')' '{' variableDeclaration* statement* '}' '}'
   ;
 classDecl
-  :   'class' className '{' fieldDeclaration* methodDecl* '}'
+  :   'class' className '{' fieldDeclaration* methodDecleration* '}'
         # baseClass
-  |   'class' className 'extends' parentName '{' fieldDeclaration* methodDecl* '}'
+  |   'class' className 'extends' parentName '{' fieldDeclaration* methodDecleration* '}'
         # childClass
         ;
 variableDeclaration : type ID ';'
         ;
 fieldDeclaration : type ID ';'
         ;
-methodDecl :
+methodDecleration :
         'public' type ID '(' (methodParam (',' methodParam+)*)? ')'
         '{' variableDeclaration* statement* 'return' expr ';' '}'
         ;

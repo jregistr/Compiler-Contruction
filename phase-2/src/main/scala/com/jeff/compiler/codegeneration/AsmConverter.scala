@@ -29,4 +29,6 @@ object AsmConverter {
 
   def classFileName(klassName: String): String = Const.OUTPUT_DIR.concat(s"$klassName.class")
 
+  def asmPrintMethod = org.objectweb.asm.commons.Method.getMethod("void println (int)")
+
 }

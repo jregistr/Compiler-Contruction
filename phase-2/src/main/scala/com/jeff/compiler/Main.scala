@@ -23,7 +23,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    val inputStream: InputStream = getClass.getClassLoader.getResourceAsStream("BinaryTree.minijava")
+    val inputStream: InputStream = getClass.getClassLoader.getResourceAsStream("HelloWorld.minijava")
     val antlrStream = new ANTLRInputStream(inputStream)
 
     val lexer = new MiniJavaLexer(antlrStream)

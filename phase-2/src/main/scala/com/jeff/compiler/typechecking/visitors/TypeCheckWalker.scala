@@ -108,7 +108,7 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope], metho
     }
   }
 
-  override def visitMethodDecl(ctx: MethodDeclContext): Klass = {
+  override def visitMethodDecleration(ctx: MethodDeclerationContext): Klass = {
     startMethodScope(ctx)
     val methodReturnName = ctx.`type`().getText
     visitChildren(ctx)
@@ -355,7 +355,7 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope], metho
     }
   }
 
-  private def startMethodScope(ctx: MethodDeclContext): Unit = {
+  private def startMethodScope(ctx: MethodDeclerationContext): Unit = {
     currentScope match {
       case None => throw Errors.noScopeFound(ctx.`type`().start)
       case Some(scope) =>

@@ -8,8 +8,9 @@ class Prog {
     int a;
 
     public int bla(){
-        int[] b;
-        b = new int[102];
+        int b;
+        int c;
+        a = 100;
         return 0;
     }
 

@@ -28,7 +28,7 @@ class SymbolListener(classes: ClassMap, scopes: ParseTreeProperty[Scope]) extend
 
   override def exitChildClass(ctx: ChildClassContext): Unit = leaveScope(ctx)
 
-  override def enterMethodDecl(ctx: MethodDeclContext): Unit = {
+  override def enterMethodDecleration(ctx: MethodDeclerationContext): Unit = {
     checkInClassScope(ctx.ID().getSymbol)
     val scope = currentScope.get
     val name = ctx.ID().getText
@@ -58,31 +58,7 @@ class SymbolListener(classes: ClassMap, scopes: ParseTreeProperty[Scope]) extend
     }
   }
 
-  override def exitMethodDecl(ctx: MethodDeclContext): Unit = leaveScope(ctx)
-
-//  override def enterImmutableVariableDeclaration(ctx: ImmutableVariableDeclarationContext): Unit = {
-//    checkInMethodScope(ctx.start)
-//    val scope = currentScope.get
-//    val variable = addVariableToCurrentScope(LocalVariable(ctx.ID().getText, findClassOrError(ctx.`type`().getText, ctx.ID().getSymbol), mutable = false), ctx)
-//    scope.initialiseSymbol(variable)
-//  }
-//
-//  override def enterMutableVariableDeclaration(ctx: MutableVariableDeclarationContext): Unit = {
-//    checkInMethodScope(ctx.start)
-//    addVariableToCurrentScope(LocalVariable(ctx.ID().getText, findClassOrError(ctx.`type`().getText, ctx.ID().getSymbol), mutable = true), ctx)
-//  }
-//
-//  override def enterImmutableFieldDeclaration(ctx: ImmutableFieldDeclarationContext): Unit = {
-//    checkInClassScope(ctx.ID().getSymbol)
-//    val scope = currentScope.get
-//    val field = addVariableToCurrentScope(Field(ctx.ID().getText, findClassOrError(ctx.`type`().getText, ctx.ID().getSymbol), mutable = false), ctx)
-//    scope.initialiseSymbol(field)
-//  }
-//
-//  override def enterMutableFieldDeclaration(ctx: MutableFieldDeclarationContext): Unit = {
-//    checkInClassScope(ctx.ID().getSymbol)
-//    addVariableToCurrentScope(Field(ctx.ID().getText, findClassOrError(ctx.`type`().getText, ctx.ID().getSymbol), mutable = true), ctx)
-//  }
+  override def exitMethodDecleration(ctx: MethodDeclerationContext): Unit = leaveScope(ctx)
 
   override def enterFieldDeclaration(ctx: FieldDeclarationContext): Unit = {
     checkInClassScope(ctx.ID().getSymbol)
