@@ -46,25 +46,6 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope,
     }
   }
 
-  /*  /**
-      * Method to add a symbol to a scope.
-      *
-      * @param symbol The symbol to add.
-      * @return A try signaling success or failure.
-      */
-    override def addSymbol(symbol: Symbole): Unit = {
-      symbol match {
-        case x: LocalVariable =>
-          findSymbolDeeply(x.name) match {
-            case None => vars.put(x.name, x)
-            case Some(found) =>
-              throw Errors.duplicateDeclaration(this, found, symbol, symbol.token)
-          }
-        case _ => throw Errors.invalidSymbolForScope(this, symbol, symbol.token)
-      }
-    }*/
-
-
   /**
     * Method to add a symbol to a scope.
     *
@@ -73,13 +54,6 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope,
     */
   override def addSymbol(symbol: Symbole): Unit = vars.put(symbol.name, symbol.asInstanceOf[LocalVariable])
 
-  //  {
-  //    symbol match {
-  //      case x:LocalVariable =>
-  //      case _=> None
-  //    }
-  //  }
-
   /**
     * Method to initialise a symbol.
     *
@@ -87,43 +61,6 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope,
     * @return A try.
     */
   override def initialiseSymbol(symbol: Symbole): Unit = initialisedVars.put(symbol.name, symbol.asInstanceOf[VariableSymbol])
-
-  //{
-
-  //    symbol match {
-  //      case variable: VariableSymbol =>
-  //        if (variable.mutable) {
-  //          val findLocalRes = findSymbolLocally(variable.name).asInstanceOf[Option[VariableSymbol]]
-  //
-  //          val findAbove: Option[VariableSymbol] = enclosingScope match {
-  //            case None => None
-  //            case Some(outerScope) =>
-  //              outerScope.findSymbolLocally(variable.name) match {
-  //                case Some(found) =>
-  //                  found match {
-  //                    case asVar: VariableSymbol => Some(asVar)
-  //                    case _ => throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
-  //                  }
-  //                case None => None
-  //              }
-  //          }
-  //
-  //          if (findLocalRes.isEmpty && findAbove.isEmpty) {
-  //            throw Errors.variableNotDeclared(this, symbol.name, symbol.token)
-  //          } else {
-  //            initialisedVars.put(variable.name, variable)
-  //            if (findAbove.isDefined) {
-  //              enclosingScope.get.initialiseSymbol(variable)
-  //            } else {
-  //              Some(variable)
-  //            }
-  //          }
-  //        } else {
-  //          throw Errors.reAssignToImmutable(this, symbol, symbol.token)
-  //        }
-  //      case _ => throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
-  //    }
-  // }
 
   override def isInitialised(name: String): Boolean = {
     initialisedVars.get(name) match {

@@ -38,46 +38,6 @@ class Klass(val name: String, val token: Token, private var _superClass: Option[
     }
   }
 
-  //  /**
-  //    * Method to initialise a symbol.
-  //    *
-  //    * @param symbol The symbol to initialise.
-  //    * @return A try.
-  //    */
-  //  override def initialiseSymbol(symbol: Symbole): Unit = {
-  //    symbol match {
-  //      case field:Field =>
-  //        fields.get(field.name) match {
-  //          case Some(_) =>
-  //
-  //          case None => enclosingScope match {
-  //            case Some(enclosing) => enclosing.initialiseSymbol(symbol)
-  //            case None => throw Errors.variableNotDeclared(this, symbol.name, symbol.token)
-  //          }
-  //        }
-  //      case _=> throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
-  //    }
-  ////    symbol match {
-  ////      case field: Field =>
-  ////        fields.get(field.name) match {
-  ////          case Some(_) =>
-  ////            field.mutable match {
-  ////              case true => initialisedFields.put(field.name, field)
-  ////              case false =>
-  ////                isInitialised(symbol) match {
-  ////                  case false => initialisedFields.put(field.name, field)
-  ////                  case true => throw Errors.reAssignToImmutable(this, symbol, symbol.token)
-  ////              }
-  ////            }
-  ////          case None => enclosingScope match {
-  ////            case Some(enclosing) => enclosing.initialiseSymbol(symbol)
-  ////            case None => throw Errors.variableNotDeclared(this, symbol.name, symbol.token)
-  ////          }
-  ////        }
-  ////      case _ => throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
-  ////    }
-  //  }
-
   /**
     * Method to get the initialised symbols for a scope.
     *
@@ -97,27 +57,6 @@ class Klass(val name: String, val token: Token, private var _superClass: Option[
       }
     }
   }
-
-  //  /**
-  //    * Method to check if a given symbol has been initialised.
-  //    *
-  //    * @param symbol The symbol to check.
-  //    * @return a boolean.
-  //    */
-  //  override def isInitialised(symbol: Symbole): Boolean = {
-  //    symbol match {
-  //      case field:Field =>
-  //        findFieldLocally(field.name) match {
-  //          case Some(_) =>
-  //            initialisedFields.get(field.name).isDefined
-  //          case None => enclosingScope match {
-  //            case Some(enclosing) => enclosing.isInitialised(symbol)
-  //            case None => throw Errors.variableNotDeclared(this, field.name, symbol.token)
-  //          }
-  //        }
-  //      case _=> throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
-  //    }
-  //  }
 
   /**
     * Method to search for a symbol globally in relation to the scope.
@@ -155,40 +94,6 @@ class Klass(val name: String, val token: Token, private var _superClass: Option[
     * @return A try.
     */
   override def initialiseSymbol(symbol: Symbole): Unit = initialisedFields.put(symbol.name, symbol.asInstanceOf[Field])
-
-  //  /**
-  //    * Method to search for an initialised symbol. Checks the current and any parent scope available.
-  //    *
-  //    * @param name The name of the symbol.
-  //    * @return An option that may enclose the symbol.
-  //    */
-  //  override def findInitialisedSymbol(name: String): Option[Symbole] = {
-  //    initialisedFields.get(name) match {
-  //      case s:Some[_] => s
-  //      case None => enclosingScope match {
-  //        case Some(enclosing) => enclosing.findInitialisedSymbol(name)
-  //        case None => None
-  //      }
-  //    }
-  //  }
-
-  //  /**
-  //    * Method to add a symbol to a scope.
-  //    *
-  //    * @param symbol The symbol to add.
-  //    * @return A try signaling success or failure.
-  //    */
-  //  override def addSymbol(symbol: Symbole): Unit = {
-  //    symbol match {
-  //      case field:Field => addField(field)
-  //      case method:Method => addMethod(method)
-  //      case _=> throw Errors.invalidSymbolForScope(this, symbol, symbol.token)
-  //    }
-  //  }
-
-
-
-
 
   /**
     * Method to get inheritance line.
