@@ -20,7 +20,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    val inputStream: InputStream = getClass.getClassLoader.getResourceAsStream("Factorial.minijava")
+    val inputStream: InputStream = getClass.getClassLoader.getResourceAsStream("errors/Shadow.minijava")
     val antlrStream = new ANTLRInputStream(inputStream)
 
     val lexer = new MiniJavaLexer(antlrStream)
@@ -44,6 +44,9 @@ object Main {
     declareAndPreCheckSymbols(classes, tree, scopes)
     runTypeCheck(classes, tree, scopes)
 
+//
+//    prettyPrint(classes)
+
   }
 
   private def declareClasses(classes:ClassMap, tree:ParseTree): Unit = {
@@ -65,7 +68,7 @@ object Main {
     println("Type check finished")
   }
 
-//  private def prettyPrint(classes:ClassMap): Unit ={
+//  private def prettyPrint(classes:ClassMap): Unit = {
 //    classes.values.foreach(klass => {
 //      print(klass.name)
 //      if(klass.superClass.isDefined){
@@ -75,7 +78,7 @@ object Main {
 //
 //      println("\tvariables")
 //      klass.fields.values.foreach(field => {
-//        println(s"\t\t${field.name}:${field.typee.name}")
+//        println(s"\t\t${if(field.mutable) "mutable" else "immutable"} ${field.name}:${field.typee.name}")
 //      })
 //
 //      println("\tMethods")
@@ -84,10 +87,9 @@ object Main {
 //
 //        println("\t\t\tLocals")
 //        method.vars.values.foreach(local => {
-//          println(s"\t\t\t\t${local.mutable} ${local.name}:${local.typee.name}")
+//          println(s"\t\t\t\t${if(local.mutable) "mutable" else "immutable"} ${local.name}:${local.typee.name}")
 //        })
 //      })
-//
 //      println("------------------------------------------------------------------")
 //    })
 //  }

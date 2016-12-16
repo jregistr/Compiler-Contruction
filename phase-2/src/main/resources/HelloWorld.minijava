@@ -6,14 +6,15 @@ class HelloWorld {
     }
 }
 
-
 class Vehicle {
 
-    int cost;
+    mutable int cost;
+    int weight = 3000;
 
-    public int move(int distance) {
-        int howMuchMove;
-        howMuchMove = distance * 10;
+    public int move(int distance, boolean cool) {
+        int superSack = 4000;
+        mutable int howMuchMove;
+        howMuchMove = 20;
         cost = 200;
         return howMuchMove;
     }
@@ -32,7 +33,7 @@ class Vehicle {
 
 }
 
-class Car  {
+class Car extends Vehicle {
 
     mutable int gas;
 
@@ -46,20 +47,4 @@ class Car  {
     }
 
 }
-
-
-/*
-class A extends C{}
-class B extends A {}
-class C extends B{}
-*/
-
-/*
-class A extends B {}
-
-class B extends A {}
-*/
-
-
-
 

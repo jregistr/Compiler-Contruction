@@ -6,8 +6,8 @@ import com.jeff.compiler.errorhandling.Errors
 import com.jeff.compiler.typechecking.definitions._
 import com.jeff.compiler.util.Aliases.ClassMap
 import com.jeff.compiler.util.Const._
-import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.ParseTreeProperty
+import org.antlr.v4.runtime.{ParserRuleContext, Token}
 
 import scala.collection.JavaConversions._
 
@@ -16,7 +16,7 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
   private var currentScope: Option[Scope] = None
 
   override def visitParenExpr(ctx: ParenExprContext): Klass = {
-    visit(ctx)
+    visit(ctx.expr())
   }
 
   override def visitIntLiteral(ctx: IntLiteralContext): Klass = {
@@ -71,27 +71,29 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
   }
 
   override def visitVarDefinition(ctx: VarDefinitionContext): Klass = {
-    currentScope match {
-      case Some(rawScope) =>
-        rawScope match {
-          case method: Method =>
-            val varToDefRaw: Symbole = method.findSymbolDeeply(ctx.ID().getText).get
-            varToDefRaw match {
-              case varToDef: VariableSymbol =>
-                val expressionType = Option(visit(ctx.expr()))
-                expressionType match {
-                  case None => throw Errors.typeNotFound(ctx.expr().getText, ctx.ID().getSymbol)
-                  case Some(expType: Klass) =>
-                    if (varToDef.typee.name == expType.name)
-                      expType
-                    else
-                      throw Errors.typeMismatch(varToDef.typee.name, expType.name, ctx.ID().getSymbol)
-                }
-              case _ => throw Errors.invalidOpOnSymbolType(varToDefRaw, ctx.ID().getSymbol)
+    checkInMethodScope(ctx)
+    val method = currentScope.get.asInstanceOf[Method]
+    val varToDefRaw: Option[Symbole] = method.findSymbolDeeply(ctx.ID().getText)
+    varToDefRaw match {
+      case Some(temp) =>
+        varToDefRaw match {
+          case varToDef: VariableSymbol =>
+            if (varToDef.mutable) {
+              val expressionType = Option(visit(ctx.expr()))
+              expressionType match {
+                case None => throw Errors.typeNotFound(ctx.expr().getText, ctx.ID().getSymbol)
+                case Some(expType: Klass) =>
+                  if (varToDef.typee.name == expType.name)
+                    expType
+                  else
+                    throw Errors.typeMismatch(varToDef.typee.name, expType.name, ctx.ID().getSymbol)
+              }
+            } else {
+              throw Errors.reAssignToImmutable(method, varToDef, ctx.start)
             }
-          case _ => throw Errors.unExpectedScope(rawScope, ctx.ID().getSymbol)
+          case _ => throw Errors.invalidOpOnSymbolType(temp, ctx.ID().getSymbol)
         }
-      case None => throw Errors.noScopeFound(ctx.ID().getSymbol)
+      case None => throw Errors.variableNotDeclared(method, ctx.ID().getText, ctx.start)
     }
   }
 
@@ -117,7 +119,6 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
     }
   }
 
-
   override def visitMethodParam(ctx: MethodParamContext): Klass = {
     checkInMethodScope(ctx)
     val typeName = ctx.`type`().getText
@@ -126,7 +127,6 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
       case Some(klass) => klass
     }
   }
-
 
   override def visitMethodCallExpression(ctx: MethodCallExpressionContext): Klass = {
     val methodOwner: Klass = visit(ctx.expr(0))
@@ -145,6 +145,28 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
               throw Errors.typeMismatch("Input parameters do not match method parameters", ctx.ID().getSymbol)
           case _ => throw Errors.typeMismatch("Method", foundSymbole.name, ctx.ID().getSymbol)
         }
+    }
+  }
+
+  override def visitImmutableVariableDeclaration(ctx: ImmutableVariableDeclarationContext): Klass = {
+    checkInMethodScope(ctx)
+    val varType: Klass = getClassOrErrorOut(ctx.`type`().getText, ctx.ID().getSymbol)
+    val expReturnType: Klass = visit(ctx.expr())
+    if (varType.name == expReturnType.name) {
+      expReturnType
+    } else {
+      throw Errors.typeMismatch(varType.name, expReturnType.name, ctx.expr().start)
+    }
+  }
+
+  override def visitImmutableFieldDeclaration(ctx: ImmutableFieldDeclarationContext): Klass = {
+    checkInClassScope(ctx)
+    val varType: Klass = getClassOrErrorOut(ctx.`type`().getText, ctx.ID().getSymbol)
+    val expReturnType: Klass = visit(ctx.expr())
+    if (varType.name == expReturnType.name) {
+      expReturnType
+    } else {
+      throw Errors.typeMismatch(varType.name, expReturnType.name, ctx.expr().start)
     }
   }
 
@@ -218,11 +240,11 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
 
   override def visitPlusExpression(ctx: PlusExpressionContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT, classes(INT), ctx)
 
-  override def visitMultiplyExpression(ctx: MultiplyExpressionContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT,classes(INT), ctx)
+  override def visitMultiplyExpression(ctx: MultiplyExpressionContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), INT, classes(INT), ctx)
 
   override def visitAndExpr(ctx: AndExprContext): Klass = twoMatch(visit(ctx.expr(0)), visit(ctx.expr(1)), BOOLEAN, classes(BOOLEAN), ctx.expr(0))
 
-  private def twoMatch(left: Klass, right: Klass, expected: String, returnType:Klass, ctx: ParserRuleContext): Klass = {
+  private def twoMatch(left: Klass, right: Klass, expected: String, returnType: Klass, ctx: ParserRuleContext): Klass = {
     checkInMethodScope(ctx)
     if (left.name == expected && right.name == expected)
       returnType
@@ -273,12 +295,30 @@ class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) exten
     }
   }
 
+  private def getClassOrErrorOut(className: String, token: Token): Klass = {
+    classes.get(className) match {
+      case Some(klass) => klass
+      case None => throw Errors.typeNotFound(className, token)
+    }
+  }
+
   private def checkInMethodScope(ctx: ParserRuleContext): Unit = {
     currentScope match {
       case None => throw Errors.noScopeFound(ctx.start)
       case Some(scope) =>
         scope match {
           case m: Method =>
+          case _ => throw Errors.unExpectedScope(scope, ctx.start)
+        }
+    }
+  }
+
+  private def checkInClassScope(ctx: ParserRuleContext): Unit = {
+    currentScope match {
+      case None => throw Errors.noScopeFound(ctx.start)
+      case Some(scope) =>
+        scope match {
+          case m: Klass =>
           case _ => throw Errors.unExpectedScope(scope, ctx.start)
         }
     }

@@ -14,9 +14,9 @@ import scala.collection.mutable.{ListBuffer, Map => MutableMap}
   */
 class Klass(val name: String, val token: Token, private var _superClass: Option[Klass]) extends Scope {
 
-  private val fields: FieldMap = MutableMap()
+  val fields: FieldMap = MutableMap()
   private val initialisedFields: FieldMap = MutableMap()
-  private val methods: MethodMap = MutableMap()
+  val methods: MethodMap = MutableMap()
 
   /**
     * Method to get the optional enclosing scope.

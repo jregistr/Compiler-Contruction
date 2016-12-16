@@ -6,7 +6,7 @@ import scala.collection.mutable.{Map => MutableMap}
 
 class Method(val name: String, val typee: Klass, private val parentScope: Scope, val parameters: ParamMap) extends Scope with Symbole {
 
-  private val vars: LocalVarMap = MutableMap()
+  val vars: LocalVarMap = MutableMap()
 
   private val initialisedVars: VariableMap = MutableMap()
 

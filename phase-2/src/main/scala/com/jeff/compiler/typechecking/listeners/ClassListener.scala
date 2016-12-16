@@ -61,7 +61,7 @@ class ClassListener(classes: ClassMap) extends MiniJavaBaseListener {
       classes.get(current._2) match {
         case Some(foundParent) =>
           awaitingParent.remove(i)
-          current._1.setSuperClass(foundParent,ctx)
+          current._1.superClass = foundParent
         case None =>
       }
     }
