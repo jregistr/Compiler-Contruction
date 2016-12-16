@@ -4,16 +4,15 @@ import com.jeff.compiler.errorhandling.Errors
 import com.jeff.compiler.util.Aliases.{FieldMap, MethodMap}
 import org.antlr.v4.runtime.{ParserRuleContext, Token}
 
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.{Map => MutableMap}
+import scala.collection.mutable.{ListBuffer, Map => MutableMap}
 
 /**
   * Class to represent a class scope.
   *
   * @param name       The name of the class.
-  * @param superClass An optional Klass that is the parent of this class
+  * @param _superClass An optional Klass that is the parent of this class
   */
-class Klass(val name: String, val token:Token, var superClass: Option[Klass]) extends Scope {
+class Klass(val name: String, val token: Token, private var _superClass: Option[Klass]) extends Scope {
 
   private val fields: FieldMap = MutableMap()
   private val initialisedFields: FieldMap = MutableMap()
@@ -24,7 +23,7 @@ class Klass(val name: String, val token:Token, var superClass: Option[Klass]) ex
     *
     * @return The optional scope enclosing this scope.
     */
-  override def enclosingScope: Option[Klass] = superClass
+  override def enclosingScope: Option[Klass] = _superClass
 
   /**
     * Method to search for a symbol locally in a given scope.
@@ -39,54 +38,86 @@ class Klass(val name: String, val token:Token, var superClass: Option[Klass]) ex
     }
   }
 
+  //  /**
+  //    * Method to initialise a symbol.
+  //    *
+  //    * @param symbol The symbol to initialise.
+  //    * @return A try.
+  //    */
+  //  override def initialiseSymbol(symbol: Symbole): Unit = {
+  //    symbol match {
+  //      case field:Field =>
+  //        fields.get(field.name) match {
+  //          case Some(_) =>
+  //
+  //          case None => enclosingScope match {
+  //            case Some(enclosing) => enclosing.initialiseSymbol(symbol)
+  //            case None => throw Errors.variableNotDeclared(this, symbol.name, symbol.token)
+  //          }
+  //        }
+  //      case _=> throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
+  //    }
+  ////    symbol match {
+  ////      case field: Field =>
+  ////        fields.get(field.name) match {
+  ////          case Some(_) =>
+  ////            field.mutable match {
+  ////              case true => initialisedFields.put(field.name, field)
+  ////              case false =>
+  ////                isInitialised(symbol) match {
+  ////                  case false => initialisedFields.put(field.name, field)
+  ////                  case true => throw Errors.reAssignToImmutable(this, symbol, symbol.token)
+  ////              }
+  ////            }
+  ////          case None => enclosingScope match {
+  ////            case Some(enclosing) => enclosing.initialiseSymbol(symbol)
+  ////            case None => throw Errors.variableNotDeclared(this, symbol.name, symbol.token)
+  ////          }
+  ////        }
+  ////      case _ => throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
+  ////    }
+  //  }
+
   /**
-    * Method to initialise a symbol.
+    * Method to get the initialised symbols for a scope.
     *
-    * @param symbol The symbol to initialise.
-    * @return A try.
+    * @return A list containing all initialised variables.
     */
-  override def initialiseSymbol(symbol: Symbole): Unit = {
-    symbol match {
-      case field: Field =>
-        fields.get(field.name) match {
-          case Some(_) =>
-            field.mutable match {
-              case true => initialisedFields.put(field.name, field)
-              case false =>
-                isInitialised(symbol) match {
-                  case false => initialisedFields.put(field.name, field)
-                  case true => throw Errors.reAssignToImmutable(this, symbol, symbol.token)
-              }
-            }
-          case None => enclosingScope match {
-            case Some(enclosing) => enclosing.initialiseSymbol(symbol)
-            case None => throw Errors.variableNotDeclared(this, symbol.name, symbol.token)
-          }
-        }
-      case _ => throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
+  override def initialisedSymbols(): List[Symbole] = initialisedFields.values.toList ++ (enclosingScope match {
+    case Some(scope: Scope) => scope.initialisedSymbols()
+    case None => List.empty
+  })
+
+  override def isInitialised(name: String): Boolean = {
+    initialisedFields.get(name) match {
+      case Some(_) => true
+      case None => enclosingScope match {
+        case None => false
+        case Some(en) => en.isInitialised(name)
+      }
     }
   }
 
-  /**
-    * Method to check if a given symbol has been initialised.
-    *
-    * @param symbol The symbol to check.
-    * @return a boolean.
-    */
-  override def isInitialised(symbol: Symbole): Boolean = {
-    symbol match {
-      case field:Field =>
-        findFieldLocally(field.name) match {
-          case Some(_) =>
-            initialisedFields.get(field.name).isDefined
-          case None => enclosingScope match {
-            case Some(enclosing) => enclosing.isInitialised(symbol)
-            case None => throw Errors.variableNotDeclared(this, field.name, symbol.token)
-          }
-        }
-      case _=> throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
-    }
-  }
+  //  /**
+  //    * Method to check if a given symbol has been initialised.
+  //    *
+  //    * @param symbol The symbol to check.
+  //    * @return a boolean.
+  //    */
+  //  override def isInitialised(symbol: Symbole): Boolean = {
+  //    symbol match {
+  //      case field:Field =>
+  //        findFieldLocally(field.name) match {
+  //          case Some(_) =>
+  //            initialisedFields.get(field.name).isDefined
+  //          case None => enclosingScope match {
+  //            case Some(enclosing) => enclosing.isInitialised(symbol)
+  //            case None => throw Errors.variableNotDeclared(this, field.name, symbol.token)
+  //          }
+  //        }
+  //      case _=> throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
+  //    }
+  //  }
 
   /**
     * Method to search for a symbol globally in relation to the scope.
@@ -96,25 +127,9 @@ class Klass(val name: String, val token:Token, var superClass: Option[Klass]) ex
     */
   override def findSymbolDeeply(name: String): Option[Symbole] = {
     findSymbolLocally(name) match {
-      case s:Some[_] => s
+      case s: Some[_] => s
       case None => enclosingScope match {
         case Some(enclosing) => enclosing.findSymbolDeeply(name)
-        case None => None
-      }
-    }
-  }
-
-  /**
-    * Method to search for an initialised symbol. Checks the current and any parent scope available.
-    *
-    * @param name The name of the symbol.
-    * @return An option that may enclose the symbol.
-    */
-  override def findInitialisedSymbol(name: String): Option[Symbole] = {
-    initialisedFields.get(name) match {
-      case s:Some[_] => s
-      case None => enclosingScope match {
-        case Some(enclosing) => enclosing.findInitialisedSymbol(name)
         case None => None
       }
     }
@@ -128,102 +143,90 @@ class Klass(val name: String, val token:Token, var superClass: Option[Klass]) ex
     */
   override def addSymbol(symbol: Symbole): Unit = {
     symbol match {
-      case field:Field => addField(field)
-      case method:Method => addMethod(method)
-      case _=> throw Errors.invalidSymbolForScope(this, symbol, symbol.token)
+      case field:Field => fields.put(field.name, field)
+      case _=> methods.put(symbol.name, symbol.asInstanceOf[Method])
     }
   }
 
   /**
-    * Method to add a field. Checks to see if a field with such name does not exist locally
-    * or up the tree.
-    * @param field The field to add to this class.
+    * Method to initialise a symbol.
+    *
+    * @param symbol The symbol to initialise.
+    * @return A try.
     */
-  def addField(field: Field): Unit = {
-    findSymbolDeeply(field.name) match {
-      case None=> fields.put(field.name, field)
-      case Some(found) => throw Errors.duplicateDeclaration(this, found, field, field.token)
+  override def initialiseSymbol(symbol: Symbole): Unit = initialisedFields.put(symbol.name, symbol.asInstanceOf[Field])
+
+  //  /**
+  //    * Method to search for an initialised symbol. Checks the current and any parent scope available.
+  //    *
+  //    * @param name The name of the symbol.
+  //    * @return An option that may enclose the symbol.
+  //    */
+  //  override def findInitialisedSymbol(name: String): Option[Symbole] = {
+  //    initialisedFields.get(name) match {
+  //      case s:Some[_] => s
+  //      case None => enclosingScope match {
+  //        case Some(enclosing) => enclosing.findInitialisedSymbol(name)
+  //        case None => None
+  //      }
+  //    }
+  //  }
+
+  //  /**
+  //    * Method to add a symbol to a scope.
+  //    *
+  //    * @param symbol The symbol to add.
+  //    * @return A try signaling success or failure.
+  //    */
+  //  override def addSymbol(symbol: Symbole): Unit = {
+  //    symbol match {
+  //      case field:Field => addField(field)
+  //      case method:Method => addMethod(method)
+  //      case _=> throw Errors.invalidSymbolForScope(this, symbol, symbol.token)
+  //    }
+  //  }
+
+
+
+
+
+  /**
+    * Method to get inheritance line.
+    *
+    * @return A list of the classes making the hierarchy.
+    */
+  def getInheritanceLine: List[Klass] = {
+    val builder = ListBuffer[Klass]()
+    var cur = superClass
+    while (cur.isDefined) {
+      builder += cur.get
+      cur = cur.get.superClass
     }
+    builder.toList
   }
 
   /**
-    * Method to add a method to this class.
-    * @param method The method to add.
+    * Method to check for inheritance cycles.
     */
-  def addMethod(method: Method): Unit = {
-    findFieldDeeply(method.name) match {
-      case None =>
-        findMethod(method.name) match {
-          case None => methods.put(method.name, method)
-          case Some(pair)=>checkForProperOverride(pair._2, method) match {
-            case true => methods.put(method.name, method)
-            case false => throw Errors.duplicateDeclaration(this, pair._2, method, method.token)
-          }
-        }
-      case Some(found) => throw Errors.duplicateDeclaration(this, found, method, method.token)
+  def checkForCycles(ctx: ParserRuleContext): Unit = {
+    val builder = ListBuffer[Klass]()
+    var currentSuper: Option[Klass] = superClass
+    while (currentSuper.isDefined) {
+      builder += currentSuper.get
+      if (currentSuper.get.name == this.name) {
+        throw Errors.cyclicDependencyError(builder.toList, ctx.start)
+      }
+      currentSuper = currentSuper.get.superClass
     }
   }
 
-  def findFieldLocally(name: String): Option[Field] = fields.get(name)
-
-  def findFieldDeeply(name: String): Option[Field] = {
-    findFieldLocally(name) match {
-      case s:Some[_] => s
-      case None => enclosingScope match {
-        case Some(enclosing) => enclosing.findFieldDeeply(name)
-        case None => None
-      }
+  def superClass_=(klass: Klass): Unit = {
+    _superClass match {
+      case None => _superClass = Some(klass)
+      case Some(found) => throw new RuntimeException(s"Super has been defined for class:$name already.")
     }
   }
 
-  def findMethod(name: String): Option[(Klass, Method)] = {
-    methods.get(name) match {
-      case Some(method) => Some(this, method)
-      case None => enclosingScope match {
-        case Some(enclosing) => enclosing.findMethod(name)
-        case None => None
-      }
-    }
-  }
-
-  def checkForProperOverride(belowMethod: Method, currentMethod: Method):Boolean = {
-    Method.isProperOverride(belowMethod, currentMethod)
-  }
-
-    /**
-      * Method to get inheritance line.
-      * @return A list of the classes making the hierarchy.
-      */
-    def getInheritanceLine:List[Klass] = {
-      val builder = ListBuffer[Klass]()
-      var cur = superClass
-      while (cur.isDefined) {
-        builder += cur.get
-        cur = cur.get.superClass
-      }
-      builder.toList
-    }
-
-    /**
-      * Method to check for inheritance cycles.
-      */
-    def checkForCycles(ctx:ParserRuleContext):Unit = {
-      val builder = ListBuffer[Klass]()
-      var currentSuper: Option[Klass] = superClass
-      while (currentSuper.isDefined) {
-        builder += currentSuper.get
-        if(currentSuper.get.name == this.name) {
-          throw Errors.cyclicDependencyError(builder.toList, ctx.start)
-        }
-        currentSuper = currentSuper.get.superClass
-      }
-    }
-
-    def setSuperClass(klass: Klass, ctx:ParserRuleContext):Unit = {
-      superClass match {
-        case None => superClass = Some(klass)
-        case Some(found) => throw Errors.superAlreadyDefined(this, found, klass, ctx.start)
-      }
-    }
+  def superClass = _superClass
 
 }

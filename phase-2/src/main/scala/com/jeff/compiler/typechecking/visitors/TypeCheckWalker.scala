@@ -1,4 +1,4 @@
-package com.jeff.compiler.typechecking
+package com.jeff.compiler.typechecking.visitors
 
 import com.compiler.generated.antlr.MiniJavaBaseVisitor
 import com.compiler.generated.antlr.MiniJavaParser._
@@ -10,7 +10,6 @@ import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.ParseTreeProperty
 
 import scala.collection.JavaConversions._
-
 
 class TypeCheckWalker(classes: ClassMap, scopes: ParseTreeProperty[Scope]) extends MiniJavaBaseVisitor[Klass] {
 

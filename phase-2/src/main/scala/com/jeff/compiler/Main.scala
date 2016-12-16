@@ -4,9 +4,9 @@ import java.io.InputStream
 
 import com.compiler.generated.antlr.{MiniJavaLexer, MiniJavaParser}
 import com.jeff.compiler.errorhandling.ParseErrorListener
-import com.jeff.compiler.typechecking.TypeCheckWalker
 import com.jeff.compiler.typechecking.definitions.{Klass, Scope}
 import com.jeff.compiler.typechecking.listeners.{ClassListener, SymbolListener}
+import com.jeff.compiler.typechecking.visitors.TypeCheckWalker
 import com.jeff.compiler.util.Aliases.ClassMap
 import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.tree.{ParseTree, ParseTreeProperty, ParseTreeWalker}

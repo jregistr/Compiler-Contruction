@@ -13,11 +13,11 @@ classDecl
   |   'class' className 'extends' parentName '{' fieldDeclaration* methodDecl* '}'
         # childClass
         ;
-variableDeclaration : type ID ';'
-         |  mutable='mutable' type ID ';'
+variableDeclaration : type ID '=' expr ';' #ImmutableVariableDeclaration
+         |  mutable='mutable' type ID ';' #MutableVariableDeclaration
         ;
-fieldDeclaration : type ID ';'
-        |  mutable='mutable' type ID ';'
+fieldDeclaration : type ID '=' expr ';' #ImmutableFieldDeclaration
+        |  mutable='mutable' type ID ';' #MutableFieldDeclaration
         ;
 methodDecl :
         'public' type ID '(' (methodParam (',' methodParam+)*)? ')'

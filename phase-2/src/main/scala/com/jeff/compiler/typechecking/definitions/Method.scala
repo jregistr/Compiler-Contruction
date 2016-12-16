@@ -1,16 +1,14 @@
 package com.jeff.compiler.typechecking.definitions
 
-import com.jeff.compiler.errorhandling.Errors
-import com.jeff.compiler.util.Aliases.{LocalVarMap, ParamMap}
-import org.antlr.v4.runtime.Token
+import com.jeff.compiler.util.Aliases.{LocalVarMap, ParamMap, VariableMap}
 
 import scala.collection.mutable.{Map => MutableMap}
 
-class Method(val name: String, val typee: Klass, private val parentScope: Scope, val parameters:ParamMap, val token: Token) extends Scope with Symbole {
+class Method(val name: String, val typee: Klass, private val parentScope: Scope, val parameters: ParamMap) extends Scope with Symbole {
 
   private val vars: LocalVarMap = MutableMap()
 
-  private val initialisedVars: LocalVarMap = MutableMap()
+  private val initialisedVars: VariableMap = MutableMap()
 
   /**
     * Method to get the optional enclosing scope.
@@ -27,7 +25,7 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope,
     */
   override def findSymbolLocally(name: String): Option[Symbole] = {
     parameters.get(name) match {
-      case s:Some[_] => s
+      case s: Some[_] => s
       case None => vars.get(name)
     }
   }
@@ -39,8 +37,8 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope,
     * @return An option that may enclose the symbol.
     */
   override def findSymbolDeeply(name: String): Option[Symbole] = {
-    findSymbolLocally(name) match  {
-      case s:Some[_] => s
+    findSymbolLocally(name) match {
+      case s: Some[_] => s
       case None => enclosingScope match {
         case Some(enclosing) => enclosing.findSymbolDeeply(name)
         case None => None
@@ -48,26 +46,24 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope,
     }
   }
 
-  /**
-    * Method to search for an initialised symbol. Checks the current and any parent scope available.
-    *
-    * @param name The name of the symbol.
-    * @return An option that may enclose the symbol.
-    */
-  override def findInitialisedSymbol(name: String): Option[Symbole] = {
-    initialisedVars.get(name) match {
-      case s: Some[_] => s
-      case None =>
-        parameters.get(name) match {
-          case s:Some[_] => s
-          case None =>
-            enclosingScope match {
-              case Some(enclosing) => enclosing.findInitialisedSymbol(name)
-              case None => None
-            }
-        }
-    }
-  }
+  /*  /**
+      * Method to add a symbol to a scope.
+      *
+      * @param symbol The symbol to add.
+      * @return A try signaling success or failure.
+      */
+    override def addSymbol(symbol: Symbole): Unit = {
+      symbol match {
+        case x: LocalVariable =>
+          findSymbolDeeply(x.name) match {
+            case None => vars.put(x.name, x)
+            case Some(found) =>
+              throw Errors.duplicateDeclaration(this, found, symbol, symbol.token)
+          }
+        case _ => throw Errors.invalidSymbolForScope(this, symbol, symbol.token)
+      }
+    }*/
+
 
   /**
     * Method to add a symbol to a scope.
@@ -75,17 +71,14 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope,
     * @param symbol The symbol to add.
     * @return A try signaling success or failure.
     */
-  override def addSymbol(symbol: Symbole): Unit = {
-    symbol match {
-      case x: LocalVariable =>
-        findSymbolDeeply(x.name) match {
-          case None => vars.put(x.name, x)
-          case Some(found) =>
-            throw Errors.duplicateDeclaration(this, found, symbol, symbol.token)
-        }
-      case _ => throw Errors.invalidSymbolForScope(this, symbol, symbol.token)
-    }
-  }
+  override def addSymbol(symbol: Symbole): Unit = vars.put(symbol.name, symbol.asInstanceOf[LocalVariable])
+
+  //  {
+  //    symbol match {
+  //      case x:LocalVariable =>
+  //      case _=> None
+  //    }
+  //  }
 
   /**
     * Method to initialise a symbol.
@@ -93,55 +86,68 @@ class Method(val name: String, val typee: Klass, private val parentScope: Scope,
     * @param symbol The symbol to initialise.
     * @return A try.
     */
-  override def initialiseSymbol(symbol: Symbole): Unit = {
-    findSymbolLocally(symbol.name) match {
-      case Some(found:Symbole) =>
-        found match {
-          case x:LocalVariable =>
-            x.mutable match {
-              case true => initialisedVars.put(x.name, x)
-              case false => initialisedVars.get(x.name).isDefined match {
-                case true => throw Errors.reAssignToImmutable(this, x, symbol.token)
-                case false => initialisedVars.put(x.name, x)
-              }
-            }
-          case _=> throw Errors.invalidOpOnSymbolType(found, symbol.token)
+  override def initialiseSymbol(symbol: Symbole): Unit = initialisedVars.put(symbol.name, symbol.asInstanceOf[VariableSymbol])
+
+  //{
+
+  //    symbol match {
+  //      case variable: VariableSymbol =>
+  //        if (variable.mutable) {
+  //          val findLocalRes = findSymbolLocally(variable.name).asInstanceOf[Option[VariableSymbol]]
+  //
+  //          val findAbove: Option[VariableSymbol] = enclosingScope match {
+  //            case None => None
+  //            case Some(outerScope) =>
+  //              outerScope.findSymbolLocally(variable.name) match {
+  //                case Some(found) =>
+  //                  found match {
+  //                    case asVar: VariableSymbol => Some(asVar)
+  //                    case _ => throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
+  //                  }
+  //                case None => None
+  //              }
+  //          }
+  //
+  //          if (findLocalRes.isEmpty && findAbove.isEmpty) {
+  //            throw Errors.variableNotDeclared(this, symbol.name, symbol.token)
+  //          } else {
+  //            initialisedVars.put(variable.name, variable)
+  //            if (findAbove.isDefined) {
+  //              enclosingScope.get.initialiseSymbol(variable)
+  //            } else {
+  //              Some(variable)
+  //            }
+  //          }
+  //        } else {
+  //          throw Errors.reAssignToImmutable(this, symbol, symbol.token)
+  //        }
+  //      case _ => throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
+  //    }
+  // }
+
+  override def isInitialised(name: String): Boolean = {
+    initialisedVars.get(name) match {
+      case None => parameters.get(name) match {
+        case Some(_) => true
+        case None => enclosingScope match {
+          case None => false
+          case Some(en) => en.isInitialised(name)
         }
-      case None =>
-        enclosingScope match {
-          case Some(enclosing) => enclosing.initialiseSymbol(symbol)
-          case None => throw Errors.variableNotDeclared(this, symbol.name, symbol.token)
-        }
+      }
+      case Some(_) => true
     }
   }
 
   /**
-    * Method to check if a given symbol has been initialised.
-    * !!Should make sure the variable exists.
+    * Method to get the initialised symbols for a scope.
     *
-    * @param symbol The symbol to check.
-    * @return a boolean.
+    * @return A list containing all initialised variables.
     */
-  override def isInitialised(symbol: Symbole): Boolean = {
-    symbol match {
-      case v: VariableSymbol =>
-        findSymbolDeeply(symbol.name) match {
-          case Some(_) => findInitialisedSymbol(symbol.name).isDefined
-          case None => throw Errors.variableNotDeclared(this, symbol.name, symbol.token)
-        }
-      case _ => throw Errors.invalidOpOnSymbolType(symbol, symbol.token)
-    }
-  }
+  override def initialisedSymbols(): List[Symbole] = initialisedVars.values.toList ++ (enclosingScope match {
+    case Some(scope: Scope) => scope.initialisedSymbols()
+    case None => List.empty
+  })
 
 }
 
-
-
-object Method {
-  def isProperOverride(first:Method, second:Method):Boolean = {
-    first.typee.name == second.typee.name &&
-    first.name.equals(second.name) &&
-    first.parameters.values.map(_.typee) == second.parameters.values.map(_.typee)
-  }
-}
 

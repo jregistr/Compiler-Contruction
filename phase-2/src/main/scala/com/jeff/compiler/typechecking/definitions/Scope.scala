@@ -31,14 +31,6 @@ trait Scope {
   def findSymbolDeeply(name: String): Option[Symbole]
 
   /**
-    * Method to search for an initialised symbol. Checks the current and any parent scope available.
-    *
-    * @param name The name of the symbol.
-    * @return An option that may enclose the symbol.
-    */
-  def findInitialisedSymbol(name: String): Option[Symbole]
-
-  /**
     * Method to add a symbol to a scope.
     *
     * @param symbol The symbol to add.
@@ -55,11 +47,11 @@ trait Scope {
   def initialiseSymbol(symbol: Symbole): Unit
 
   /**
-    * Method to check if a given symbol has been initialised.
-    *
-    * @param symbol The symbol to check.
-    * @return a boolean.
+    * Method to get the initialised symbols for a scope.
+    * @return A list containing all initialised variables.
     */
-  def isInitialised(symbol: Symbole): Boolean
+  def initialisedSymbols():List[Symbole]
+
+  def isInitialised(name:String):Boolean
 
 }
